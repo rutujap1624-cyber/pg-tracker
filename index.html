@@ -475,8 +475,15 @@ let weeks=JSON.parse(localStorage.getItem('pg_weeks')||'{}');
 let months=JSON.parse(localStorage.getItem('pg_months')||'{}');
 
 async function saveToSheets(tab, row){
-  const payload=encodeURIComponent(JSON.stringify({tab,row}));
-  await fetch(GAS_URL+'?payload='+payload,{method:'GET',mode:'no-cors'});
+  try{
+    await fetch(GAS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tab,row})
+    });
+  }catch(e){
+    // fallback - data is safe in localStorage
+  }
 }
 
 
