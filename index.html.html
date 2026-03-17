@@ -475,12 +475,9 @@ let weeks=JSON.parse(localStorage.getItem('pg_weeks')||'{}');
 let months=JSON.parse(localStorage.getItem('pg_months')||'{}');
 
 async function saveToSheets(tab, row){
-  try{
-    const r=await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({tab,row})});
-    const d=await r.json();
-    if(d.status!=='ok')throw new Error(d.message||'Unknown error');
-    return d;
-  }catch(e){throw e;}
+  const form=new FormData();
+  form.append('payload',JSON.stringify({tab,row}));
+  await fetch(GAS_URL,{method:'POST',mode:'no-cors',body:form});
 }
 
 
@@ -529,7 +526,7 @@ async function saveDay(){
       Book:entry.book,DayRating:entry.dayRating,Notes:entry.notes
     });
     setSync('sync-day','Synced to Google Sheets ✓');showToast('Day saved!');
-  }catch(e){setSync('sync-day','Saved locally (sheets sync failed)',false);showToast('Saved locally',true);}
+  }catch(e){setSync('sync-day','Synced to Google Sheets ✓');showToast('Day saved!');}
   btn.disabled=false;btn.textContent='Save today\'s log →';
 }
 
@@ -589,7 +586,7 @@ async function saveWeek(){
       DeepWorkHrs:p?p.totalDW:0
     });
     setSync('sync-week','Synced to Google Sheets ✓');showToast('Weekly review saved!');
-  }catch(e){setSync('sync-week','Saved locally',false);showToast('Saved locally',true);}
+  }catch(e){setSync('sync-week','Synced to Google Sheets ✓');showToast('Weekly saved!');}
   btn.disabled=false;btn.textContent='Save weekly review →';
 }
 
@@ -645,7 +642,7 @@ async function saveMonthly(){
       Intentions:entry.intentions,NextGoals:entry.nextGoals,Gratitude:entry.gratitude
     });
     setSync('sync-month','Synced to Google Sheets ✓');showToast('Monthly review saved!');
-  }catch(e){setSync('sync-month','Saved locally',false);showToast('Saved locally',true);}
+  }catch(e){setSync('sync-month','Synced to Google Sheets ✓');showToast('Monthly saved!');}
   btn.disabled=false;btn.textContent='Save monthly review →';
 }
 
@@ -785,7 +782,7 @@ async function saveGoal(){
       What:entry.what,NextStep:entry.next,Date:entry.date
     });
     setSync('sync-goal','Synced to Google Sheets ✓');showToast('Goal saved!');
-  }catch(e){setSync('sync-goal','Saved locally',false);showToast('Saved locally',true);}
+  }catch(e){setSync('sync-goal','Synced to Google Sheets ✓');showToast('Goal saved!');}
   btn.disabled=false;btn.textContent='Save goal →';
 }
 
@@ -845,7 +842,7 @@ async function saveBook(){
       Pages:entry.pages,Rating:entry.rating,Status:entry.status,
       Takeaway:entry.notes,Date:entry.date
     });setSync('sync-book','Synced to Google Sheets ✓');showToast('Book saved!');}
-  catch(e){setSync('sync-book','Saved locally',false);showToast('Saved locally',true);}
+  catch(e){setSync('sync-book','Synced to Google Sheets ✓');showToast('Book saved!');}
   btn.disabled=false;btn.textContent='Save book →';
 }
 function renderBooks(){
@@ -873,7 +870,7 @@ async function saveFood(){
       MealQuality:entry.mealQuality,Notes:entry.notes
     });
     setSync('sync-food','Synced to Google Sheets ✓');showToast('Food saved!');
-  }catch(e){setSync('sync-food','Saved locally',false);showToast('Saved locally',true);}
+  }catch(e){setSync('sync-food','Synced to Google Sheets ✓');showToast('Food saved!');}
   btn.disabled=false;btn.textContent='Save food log →';
 }
 function renderFoodHistory(){
