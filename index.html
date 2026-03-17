@@ -475,9 +475,8 @@ let weeks=JSON.parse(localStorage.getItem('pg_weeks')||'{}');
 let months=JSON.parse(localStorage.getItem('pg_months')||'{}');
 
 async function saveToSheets(tab, row){
-  const form=new FormData();
-  form.append('payload',JSON.stringify({tab,row}));
-  await fetch(GAS_URL,{method:'POST',mode:'no-cors',body:form});
+  const payload=encodeURIComponent(JSON.stringify({tab,row}));
+  await fetch(GAS_URL+'?payload='+payload,{method:'GET',mode:'no-cors'});
 }
 
 
