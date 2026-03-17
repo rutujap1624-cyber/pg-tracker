@@ -1,5 +1,5 @@
 exports.handler = async function(event) {
-  const TOKEN = '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';
+  const TOKEN = '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';
   
   if (event.httpMethod === 'OPTIONS') {
     return {
