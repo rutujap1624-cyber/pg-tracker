@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PG Tracker">
+<title>PG Life Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0e0f;--s1:#1a1a1c;--s2:#222224;--s3:#2a2a2d;--b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.12);--b3:rgba(255,255,255,0.2);--t1:#f0ede8;--t2:#9a9690;--t3:#5a5754;--gold:#c8a96e;--green:#5a9e6f;--gbg:rgba(90,158,111,0.15);--red:#c05a5a;--rbg:rgba(192,90,90,0.12);--blue:#5a82c0;--bbg:rgba(90,130,192,0.12);--r:12px;--rsm:8px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t1);min-height:100vh;}
+.app{max-width:480px;margin:0 auto;padding-bottom:110px;}
+.header{padding:52px 20px 16px;}
+.header h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--t1);letter-spacing:-0.3px;}
+.header-sub{font-size:13px;color:var(--t2);margin-top:3px;font-weight:300;}
+.quote{margin:0 20px 4px;padding:12px 16px;background:var(--s1);border:0.5px solid var(--b1);border-radius:var(--r);font-size:13px;color:var(--t2);font-style:italic;line-height:1.6;}
+.nav{display:flex;gap:6px;padding:14px 20px;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;background:var(--bg);z-index:100;border-bottom:0.5px solid var(--b1);}
+.nav::-webkit-scrollbar{display:none;}
+.nb{flex-shrink:0;padding:7px 14px;font-size:13px;font-family:'DM Sans',sans-serif;border:0.5px solid var(--b2);border-radius:20px;background:transparent;color:var(--t2);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nb.active{background:var(--gold);border-color:var(--gold);color:#1a1108;font-weight:500;}
+.nb:hover:not(.active){background:var(--s2);}
+.view{display:none;padding:16px 20px;}
+.view.active{display:block;}
+.card{background:var(--s1);border:0.5px solid var(--b1);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.ct{font-size:11px;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+.f{margin-bottom:14px;}.f:last-child{margin-bottom:0;}
+.fl{display:block;font-size:13px;color:var(--t2);margin-bottom:7px;font-weight:300;}
+input[type=text],input[type=number],textarea,select{width:100%;padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--s2);border:0.5px solid var(--b2);border-radius:var(--rsm);color:var(--t1);outline:none;transition:border-color .2s;}
+input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:56px;line-height:1.5;}
+select{appearance:none;cursor:pointer;}
+input::placeholder,textarea::placeholder{color:var(--t3);}
+.tr{display:flex;flex-wrap:wrap;gap:6px;}
+.tg{padding:7px 13px;font-size:13px;font-family:'DM Sans',sans-serif;border:0.5px solid var(--b2);border-radius:20px;background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;}
+.tg.on{background:var(--gbg);border-color:var(--green);color:#8fd4a4;}
+.tg.bad.on{background:var(--rbg);border-color:var(--red);color:#e8a0a0;}
+.sr{display:flex;align-items:center;gap:12px;}
+.sr input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--s3);border-radius:2px;outline:none;}
+.sr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:pointer;}
+.sv{font-size:14px;font-weight:500;color:var(--gold);min-width:36px;text-align:right;}
+.rr{display:flex;gap:4px;flex-wrap:wrap;}
+.rb{width:32px;height:32px;font-size:12px;font-family:'DM Sans',sans-serif;border:0.5px solid var(--b2);border-radius:var(--rsm);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;}
+.rb.sel{background:var(--gold);border-color:var(--gold);color:#1a1108;font-weight:500;}
+.sbtn{width:100%;padding:14px;font-size:15px;font-family:'DM Serif Display',serif;letter-spacing:.3px;background:var(--gold);border:none;border-radius:var(--r);color:#1a1108;cursor:pointer;margin-top:8px;transition:opacity .2s;}
+.sbtn:active{opacity:.8;}.sbtn:disabled{opacity:.4;cursor:not-allowed;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.g2 .f{margin:0;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.mc{background:var(--s1);border:0.5px solid var(--b1);border-radius:var(--r);padding:14px;text-align:center;}
+.mc-val{font-family:'DM Serif Display',serif;font-size:26px;color:var(--gold);}
+.mc-lbl{font-size:11px;color:var(--t3);margin-top:3px;}
+.ar{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--b1);}
+.ar:last-child{border-bottom:none;}
+.ar-l{font-size:13px;color:var(--t2);}
+.ar-v{font-size:14px;font-weight:500;color:var(--gold);}
+.pb{height:5px;background:var(--s3);border-radius:3px;overflow:hidden;margin:5px 0;}
+.pb-f{height:100%;border-radius:3px;background:var(--gold);transition:width .5s;}
+.ab-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.ab-l{font-size:12px;color:var(--t2);width:120px;flex-shrink:0;}
+.ab-b{flex:1;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.ab-f{height:100%;border-radius:3px;background:var(--gold);}
+.ab-v{font-size:12px;color:var(--t3);width:28px;text-align:right;}
+.hm-grid{display:grid;grid-template-columns:repeat(53,1fr);gap:2px;}
+.hm-c{aspect-ratio:1;border-radius:2px;background:var(--s2);}
+.hm-c.l1{background:#2d5a3d;}.hm-c.l2{background:#3d7a52;}.hm-c.l3{background:#5a9e6f;}.hm-c.l4{background:#7dc492;}
+.wk-g{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.wk-c{text-align:center;}
+.wk-l{font-size:10px;color:var(--t3);margin-bottom:4px;}
+.wk-b{height:48px;background:var(--s2);border-radius:4px;position:relative;overflow:hidden;}
+.wk-f{position:absolute;bottom:0;left:0;right:0;background:var(--gold);opacity:.7;border-radius:4px 4px 0 0;}
+.wk-v{font-size:10px;color:var(--t3);margin-top:3px;}
+.dot-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--s2);border:0.5px solid var(--b2);}
+.dot.done{background:var(--green);border-color:var(--green);}
+.hab-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid var(--b1);}
+.hab-row:last-child{border-bottom:none;}
+.hab-n{font-size:14px;color:var(--t1);}
+.hab-s{font-size:12px;color:var(--t3);margin-top:2px;}
+.sp{display:inline-block;width:7px;height:7px;background:var(--gold);border-radius:50%;margin-right:4px;}
+.rm-btn{font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;padding:4px 8px;font-family:'DM Sans',sans-serif;}
+.bk-row{display:flex;gap:12px;padding:11px 0;border-bottom:0.5px solid var(--b1);align-items:flex-start;}
+.bk-row:last-child{border-bottom:none;}
+.bk-sp{width:32px;height:44px;border-radius:3px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:15px;color:var(--gold);flex-shrink:0;border:0.5px solid var(--b2);}
+.bk-t{font-size:14px;font-weight:500;color:var(--t1);}
+.bk-m{font-size:12px;color:var(--t2);margin-top:3px;}
+.meal-c{background:var(--s2);border-radius:var(--rsm);padding:12px;margin-bottom:10px;border:0.5px solid var(--b1);}
+.meal-h{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.meal-i{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.meal-tl{font-size:13px;font-weight:500;color:var(--t1);}
+.meal-ta{width:100%;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--s1);border:0.5px solid var(--b1);border-radius:6px;color:var(--t1);resize:vertical;min-height:44px;}
+.meal-ta:focus{outline:none;border-color:var(--gold);}
+.meal-tm{margin-left:auto;width:76px;padding:4px 8px;font-size:12px;background:var(--s1);border:0.5px solid var(--b2);border-radius:6px;color:var(--t2);font-family:'DM Sans',sans-serif;}
+.fl-e{padding:11px 0;border-bottom:0.5px solid var(--b1);}
+.fl-e:last-child{border-bottom:none;}
+.fl-d{font-size:12px;color:var(--gold);margin-bottom:6px;font-weight:500;}
+.fl-r{display:flex;gap:8px;margin-bottom:3px;}
+.fl-ll{font-size:10px;color:var(--t3);width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em;padding-top:2px;}
+.fl-v{font-size:13px;color:var(--t2);flex:1;line-height:1.4;}
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;margin:2px;}
+.pill-g{background:var(--gbg);color:#8fd4a4;border:0.5px solid var(--green);}
+.pill-r{background:var(--rbg);color:#e8a0a0;border:0.5px solid var(--red);}
+.pill-b{background:var(--bbg);color:#90b0e4;border:0.5px solid var(--blue);}
+.goal-c{background:var(--s2);border:0.5px solid var(--b1);border-radius:var(--r);padding:14px;margin-bottom:10px;}
+.conn-b{background:rgba(200,169,110,0.06);border:0.5px solid rgba(200,169,110,0.2);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--t2);line-height:1.5;}
+.conn-b strong{color:var(--gold);font-weight:500;}
+.sync-st{font-size:11px;color:var(--t3);text-align:center;padding:8px;}
+.sync-p{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle;}
+.sync-p.err{background:var(--red);}
+.tab-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.tab-btn{padding:5px 12px;font-size:12px;font-family:'DM Sans',sans-serif;border:0.5px solid var(--b2);border-radius:16px;background:transparent;color:var(--t2);cursor:pointer;}
+.tab-btn.active{background:var(--s2);color:var(--t1);border-color:var(--b3);}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gold);color:#1a1108;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:var(--red);color:white;}
+.empty{font-size:13px;color:var(--t3);padding:8px 0;font-style:italic;}
+.rl{font-size:12px;color:var(--t3);font-style:italic;margin-bottom:10px;line-height:1.5;}
+.divider{height:0.5px;background:var(--b1);margin:14px 0;}
+.stat-inline{font-size:12px;color:var(--t3);margin-bottom:6px;padding:6px 10px;background:var(--s2);border-radius:var(--rsm);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1 id="greeting">Good evening</h1>
+    <div class="header-sub" id="datestr"></div>
+  </div>
+  <div class="quote" id="quote"></div>
+  <nav class="nav">
+    <button class="nb active" onclick="showView('daily',this)">Daily</button>
+    <button class="nb" onclick="showView('food',this)">Food</button>
+    <button class="nb" onclick="showView('habits',this)">Habits</button>
+    <button class="nb" onclick="showView('books',this)">Books</button>
+    <button class="nb" onclick="showView('finance',this)">Finance</button>
+    <button class="nb" onclick="showView('weekly',this)">Weekly</button>
+    <button class="nb" onclick="showView('monthly',this)">Monthly</button>
+    <button class="nb" onclick="showView('quarterly',this)">Quarterly</button>
+    <button class="nb" onclick="showView('goals',this)">Goals</button>
+    <button class="nb" onclick="showView('dashboard',this)">Year</button>
+  </nav>
+
+  <!-- DAILY -->
+  <div id="view-daily" class="view active">
+    <div class="card"><div class="ct">Morning routine</div>
+      <div class="f"><label class="fl">Wake up time</label><input type="text" id="d-wake" placeholder="e.g. 6:30 AM"></div>
+      <div class="f"><label class="fl">Morning rituals done</label><div class="tr"><button class="tg" onclick="tg(this)">Meditation</button><button class="tg" onclick="tg(this)">Workout</button><button class="tg" onclick="tg(this)">Cold shower</button><button class="tg" onclick="tg(this)">Journaling</button><button class="tg" onclick="tg(this)">Reading</button></div></div>
+      <div class="f"><label class="fl">Morning rating</label><div class="rr" id="r-morning"></div></div>
+    </div>
+    <div class="card"><div class="ct">Work & productivity</div>
+      <div class="f"><label class="fl">Deep work hours</label><div class="sr"><input type="range" min="0" max="12" step="1" value="0" id="sl-dw" oninput="sv('sl-dw','o-dw','h')"><span class="sv" id="o-dw">0h</span></div></div>
+      <div class="f"><label class="fl">Top tasks completed</label><textarea id="d-tasks" placeholder="1. &#10;2. &#10;3. "></textarea></div>
+      <div class="f"><label class="fl">What I learned today</label><input type="text" id="d-learn" placeholder="Book, article, course, concept..."></div>
+      <div class="f"><label class="fl">Learning time (mins)</label><div class="sr"><input type="range" min="0" max="180" step="5" value="0" id="sl-lt" oninput="sv('sl-lt','o-lt','m')"><span class="sv" id="o-lt">0m</span></div></div>
+      <div class="f"><label class="fl">Work energy</label><div class="rr" id="r-work"></div></div>
+    </div>
+    <div class="card"><div class="ct">Health & body</div>
+      <div class="f"><label class="fl">Workout type</label><div class="tr"><button class="tg" onclick="tg(this)">Gym</button><button class="tg" onclick="tg(this)">Run</button><button class="tg" onclick="tg(this)">Yoga</button><button class="tg" onclick="tg(this)">Walk</button><button class="tg" onclick="tg(this)">Rest day</button></div></div>
+      <div class="f"><label class="fl">Workout duration (mins)</label><div class="sr"><input type="range" min="0" max="120" step="5" value="0" id="sl-wd" oninput="sv('sl-wd','o-wd','m')"><span class="sv" id="o-wd">0m</span></div></div>
+      <div class="f"><label class="fl">Water (glasses)</label><div class="sr"><input type="range" min="0" max="14" step="1" value="0" id="sl-wt" oninput="sv('sl-wt','o-wt','')"><span class="sv" id="o-wt">0</span></div></div>
+      <div class="f"><label class="fl">Sleep last night (hours)</label><div class="sr"><input type="range" min="0" max="12" step="0.5" value="7" id="sl-sl" oninput="sv('sl-sl','o-sl','h')"><span class="sv" id="o-sl">7h</span></div></div>
+      <div class="f"><label class="fl">Sleep quality</label><div class="rr" id="r-sleep"></div></div>
+      <div class="f"><label class="fl">Slept at</label><input type="text" id="d-sleeptime" placeholder="e.g. 11:30 PM"></div>
+    </div>
+    <div class="card"><div class="ct">Mind & mood</div>
+      <div class="f"><label class="fl">Mood (1–10)</label><div class="rr" id="r-mood"></div></div>
+      <div class="f"><label class="fl">Energy (1–10)</label><div class="rr" id="r-energy"></div></div>
+      <div class="f"><label class="fl">Stress (1–10)</label><div class="rr" id="r-stress"></div></div>
+      <div class="f"><label class="fl">What affected your mood?</label><textarea id="d-mood-note" placeholder="Good or bad — note it..."></textarea></div>
+    </div>
+    <div class="card"><div class="ct">Habit check</div><div id="daily-habit-checks"><div class="empty">Add habits in the Habits tab first</div></div></div>
+    <div class="card"><div class="ct">Bad habits awareness</div>
+      <div class="f"><label class="fl">Instagram / social (hours)</label><div class="sr"><input type="range" min="0" max="8" step="0.5" value="0" id="sl-ig" oninput="sv('sl-ig','o-ig','h')"><span class="sv" id="o-ig">0h</span></div></div>
+      <div class="f"><label class="fl">YouTube / Netflix (hours)</label><div class="sr"><input type="range" min="0" max="8" step="0.5" value="0" id="sl-yt" oninput="sv('sl-yt','o-yt','h')"><span class="sv" id="o-yt">0h</span></div></div>
+      <div class="f"><label class="fl">Flag today</label><div class="tr"><button class="tg bad" onclick="tg(this)">Junk food</button><button class="tg bad" onclick="tg(this)">Late night eating</button><button class="tg bad" onclick="tg(this)">Overspending</button><button class="tg bad" onclick="tg(this)">Smoking</button><button class="tg bad" onclick="tg(this)">Alcohol</button></div></div>
+    </div>
+    <div class="card"><div class="ct">Money spent today</div>
+      <div class="rl">Add each spend separately — yes you can add multiple! Full view in Finance tab.</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="number" id="d-spend-amt" placeholder="₹ amount" min="0" style="flex:1">
+        <select id="d-spend-cat" style="flex:1.5">
+          <option value="">Category</option>
+          <option>Food &amp; drinks</option>
+          <option>Online order</option>
+          <option>Grocery</option>
+          <option>Transport</option>
+          <option>Shopping</option>
+          <option>Bills &amp; subscriptions</option>
+          <option>Health &amp; wellness</option>
+          <option>Entertainment</option>
+          <option>Savings / investment</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <input type="text" id="d-spend-note" placeholder="What was it for? (optional)" style="margin-bottom:8px">
+      <button onclick="addSpend()" style="width:100%;padding:9px;background:var(--s2);border:0.5px solid var(--b2);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:13px;border-radius:var(--rsm);cursor:pointer">+ Add spend</button>
+      <div id="today-spends" style="margin-top:8px"></div>
+    </div>
+    <div class="card"><div class="ct">Evening reflection</div>
+      <div class="f"><label class="fl">Biggest win today</label><input type="text" id="d-win" placeholder="Even small wins count..."></div>
+      <div class="f"><label class="fl">One thing to improve tomorrow</label><input type="text" id="d-improve" placeholder="Be specific..."></div>
+      <div class="f"><label class="fl">Grateful for</label><input type="text" id="d-grateful" placeholder="3 things ideally..."></div>
+      <div class="f"><label class="fl">Book / pages read today</label><input type="text" id="d-book" placeholder="e.g. Atomic Habits p.45–60"></div>
+      <div class="f"><label class="fl">Overall day rating</label><div class="rr" id="r-day"></div></div>
+      <div class="f"><label class="fl">Journal / notes</label><textarea id="d-notes" placeholder="Anything on your mind..."></textarea></div>
+    </div>
+    <button class="sbtn" id="btn-day" onclick="saveDay()">Save today's log →</button>
+    <div class="sync-st" id="sync-day"></div>
+  </div>
+
+  <!-- FOOD -->
+  <div id="view-food" class="view">
+    <div class="card"><div class="ct">Today's meals</div>
+      <div class="f"><label class="fl">How did you eat today?</label>
+        <div class="tr"><button class="tg" onclick="tgSingle(this,'mtype')">🏠 Home cooked</button><button class="tg bad" onclick="tgSingle(this,'mtype')">📱 Ordered online</button><button class="tg" onclick="tgSingle(this,'mtype')">🍽 Ate out</button><button class="tg" onclick="tgSingle(this,'mtype')">Mixed</button></div>
+      </div>
+      <div class="meal-c"><div class="meal-h"><div class="meal-i" style="background:rgba(200,169,110,.15)">☀</div><div class="meal-tl">Breakfast</div><input class="meal-tm" type="text" id="f-bt" placeholder="Time"></div><textarea class="meal-ta" id="f-breakfast" placeholder="What did you eat?"></textarea></div>
+      <div class="meal-c"><div class="meal-h"><div class="meal-i" style="background:rgba(90,130,192,.15)">◈</div><div class="meal-tl">Lunch</div><input class="meal-tm" type="text" id="f-lt" placeholder="Time"></div><textarea class="meal-ta" id="f-lunch" placeholder="What did you eat?"></textarea></div>
+      <div class="meal-c"><div class="meal-h"><div class="meal-i" style="background:rgba(90,158,111,.15)">★</div><div class="meal-tl">Dinner</div><input class="meal-tm" type="text" id="f-dt" placeholder="Time"></div><textarea class="meal-ta" id="f-dinner" placeholder="What did you eat?"></textarea></div>
+      <div class="meal-c"><div class="meal-h"><div class="meal-i" style="background:rgba(192,90,90,.12)">+</div><div class="meal-tl">Snacks</div></div><textarea class="meal-ta" id="f-snacks" placeholder="Any snacks?"></textarea></div>
+      <div class="f" style="margin-top:10px">
+        <button onclick="estimateNutrition()" id="btn-nutrition" style="width:100%;padding:10px;background:var(--s2);border:0.5px solid var(--b2);color:var(--t2);font-family:'DM Sans',sans-serif;font-size:13px;border-radius:var(--rsm);cursor:pointer">✦ Auto-estimate protein &amp; nutrition</button>
+        <div id="nutrition-result" style="margin-top:8px;display:none;background:var(--s2);border-radius:var(--rsm);padding:12px;font-size:13px;line-height:1.7;color:var(--t2);border:0.5px solid var(--gold);white-space:pre-wrap"></div>
+      </div>
+    </div>
+    <div class="card"><div class="ct">Supplements</div>
+      <div class="f"><div class="tr" id="supp-row"><button class="tg" onclick="tg(this)">Vitamin D</button><button class="tg" onclick="tg(this)">Vitamin C</button><button class="tg" onclick="tg(this)">Omega 3</button><button class="tg" onclick="tg(this)">Magnesium</button><button class="tg" onclick="tg(this)">Protein</button><button class="tg" onclick="tg(this)">Multivitamin</button></div></div>
+      <div class="f"><label class="fl">Other</label><input type="text" id="f-supp-other" placeholder="Anything else..."></div>
+    </div>
+    <div class="card"><div class="ct">Alcohol & meal quality</div>
+      <div class="f"><label class="fl">Drank today?</label><div class="tr"><button class="tg" id="alc-no" onclick="alcTog('no')">No</button><button class="tg bad" id="alc-yes" onclick="alcTog('yes')">Yes</button></div></div>
+      <div id="alc-expand" style="display:none">
+        <div class="f"><label class="fl">What?</label><input type="text" id="f-alc-what" placeholder="e.g. 2 beers, wine..."></div>
+        <div class="f"><label class="fl">Occasion</label><input type="text" id="f-alc-occasion" placeholder="e.g. out with friends..."></div>
+      </div>
+      <div class="f"><label class="fl">Meal quality today</label><div class="tr"><button class="tg" onclick="tgSingle(this,'mq')">Clean & healthy</button><button class="tg" onclick="tgSingle(this,'mq')">Mixed</button><button class="tg" onclick="tgSingle(this,'mq')">Mostly junk</button></div></div>
+      <div class="f"><label class="fl">Food notes</label><textarea id="f-notes" placeholder="Cravings, how you felt after eating..."></textarea></div>
+    </div>
+    <button class="sbtn" id="btn-food" onclick="saveFood()">Save food log →</button>
+    <div class="sync-st" id="sync-food"></div>
+    <div class="card" style="margin-top:12px"><div class="ct">Recent food log</div><div id="food-history"><div class="empty">No entries yet.</div></div></div>
+  </div>
+
+  <!-- HABITS -->
+  <div id="view-habits" class="view">
+    <div class="card"><div class="ct">My habits</div><div id="habit-list"><div class="empty">No habits yet. Add one below!</div></div></div>
+    <div class="card"><div class="ct">Add a habit</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="new-hab-name" placeholder="Habit name" style="flex:1;min-width:130px">
+        <select id="new-hab-type" style="flex:1;min-width:130px"><option value="good">Good habit</option><option value="bad">Bad habit (avoid)</option></select>
+      </div>
+      <button class="sbtn" style="margin-top:10px" onclick="addHabit()">Add habit</button>
+    </div>
+    <div class="card"><div class="ct">30-day view</div><div class="tab-row" id="hab-tabs"></div><div id="hab-dots"></div></div>
+  </div>
+
+  <!-- BOOKS -->
+  <div id="view-books" class="view">
+    <div class="card"><div class="ct">Log a book</div>
+      <div class="g2">
+        <div class="f"><label class="fl">Title</label><input type="text" id="b-title" placeholder="Book title"></div>
+        <div class="f"><label class="fl">Author</label><input type="text" id="b-author" placeholder="Author"></div>
+        <div class="f"><label class="fl">Genre</label><input type="text" id="b-genre" placeholder="Self-help, fiction..."></div>
+        <div class="f"><label class="fl">Pages today</label><input type="number" id="b-pages" placeholder="0" min="0"></div>
+      </div>
+      <div class="f"><label class="fl">Status</label><div class="tr"><button class="tg" onclick="tgSingle(this,'bs')">Reading</button><button class="tg" onclick="tgSingle(this,'bs')">Finished</button><button class="tg" onclick="tgSingle(this,'bs')">Paused</button><button class="tg" onclick="tgSingle(this,'bs')">Want to read</button></div></div>
+      <div class="f"><label class="fl">Rating</label><div class="rr" id="r-book"></div></div>
+      <div class="f"><label class="fl">Key takeaway</label><textarea id="b-notes" placeholder="What stood out?"></textarea></div>
+      <button class="sbtn" id="btn-book" onclick="saveBook()">Save book →</button>
+      <div class="sync-st" id="sync-book"></div>
+    </div>
+    <div class="card"><div class="ct">Reading list</div><div id="book-list"><div class="empty">No books logged yet.</div></div></div>
+  </div>
+
+
+  <!-- FINANCE -->
+  <div id="view-finance" class="view">
+    <div class="conn-b"><strong>Your money, tracked simply.</strong> Daily spends come from the Daily tab automatically. Add savings and see your ₹1L goal progress here.</div>
+
+    <!-- SAVINGS GOAL -->
+    <div class="card"><div class="ct">Savings goal — ₹1,00,000 by end of year</div>
+      <div id="fin-goal-bar"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <div style="flex:1;text-align:center;padding:12px;background:var(--s2);border-radius:var(--rsm)">
+          <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)" id="fin-saved-total">₹0</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">saved this year</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:12px;background:var(--s2);border-radius:var(--rsm)">
+          <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--t1)" id="fin-remaining">₹1,00,000</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">remaining</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG SAVINGS -->
+    <div class="card"><div class="ct">Log savings / investment</div>
+      <div class="rl">Add money you put away — SIP, FD, savings account, emergency fund, anything.</div>
+      <div class="g2">
+        <div class="f"><label class="fl">Amount (₹)</label><input type="number" id="fin-save-amt" placeholder="e.g. 5000" min="0"></div>
+        <div class="f"><label class="fl">Where</label>
+          <select id="fin-save-where">
+            <option>SIP / Mutual fund</option>
+            <option>FD</option>
+            <option>Savings account</option>
+            <option>Emergency fund</option>
+            <option>Cash savings</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="f"><label class="fl">Note (optional)</label><input type="text" id="fin-save-note" placeholder="e.g. Zerodha SIP March"></div>
+      <button class="sbtn" onclick="logSaving()">Log saving →</button>
+    </div>
+
+    <!-- THIS MONTH SUMMARY -->
+    <div class="card"><div class="ct">This month at a glance</div>
+      <div id="fin-month-summary"></div>
+    </div>
+
+    <!-- SPEND BY CATEGORY -->
+    <div class="card"><div class="ct">Spending by category — this month</div>
+      <div id="fin-cat-breakdown"></div>
+    </div>
+
+    <!-- ONLINE ORDER COUNT -->
+    <div class="card"><div class="ct">Online order tracker</div>
+      <div class="rl">Tracks every time you logged "Online order" in daily spend.</div>
+      <div id="fin-order-tracker"></div>
+    </div>
+
+    <!-- RECENT SPENDS -->
+    <div class="card"><div class="ct">Recent spends</div>
+      <div id="fin-recent-spends"><div class="empty">No spends logged yet. Add from Daily tab.</div></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY -->
+  <div id="view-weekly" class="view">
+    <div class="conn-b"><strong>Auto-filled from your daily logs.</strong> Numbers below are calculated from this week's data. You only add your reflection.</div>
+    <div class="card"><div class="ct">This week — from daily logs</div><div id="w-auto-data"><div class="empty">Log daily to see data here.</div></div></div>
+    <div class="card"><div class="ct">Day ratings this week</div><div class="wk-g" id="w-day-bars"></div></div>
+    <div class="card"><div class="ct">Habit consistency this week</div><div id="w-habit-dots"><div class="empty">No habits tracked yet.</div></div></div>
+    <div class="card"><div class="ct">Your weekly reflection</div>
+      <div class="rl">Data is auto-filled above. This is your personal thoughts.</div>
+      <div class="f"><label class="fl">Biggest wins this week</label><textarea id="w-wins" placeholder="What went well?"></textarea></div>
+      <div class="f"><label class="fl">What drained you?</label><textarea id="w-drain" placeholder="Energy drainers..."></textarea></div>
+      <div class="f"><label class="fl">What energized you?</label><textarea id="w-nrg" placeholder="Things that gave you life..."></textarea></div>
+      <div class="f"><label class="fl">Top 3 priorities next week</label><textarea id="w-next" placeholder="1. &#10;2. &#10;3. "></textarea></div>
+      <div class="f"><label class="fl">Week rating</label><div class="rr" id="r-week"></div></div>
+    </div>
+    <button class="sbtn" id="btn-week" onclick="saveWeek()">Save weekly review →</button>
+    <div class="sync-st" id="sync-week"></div>
+  </div>
+
+  <!-- MONTHLY -->
+  <div id="view-monthly" class="view">
+    <div class="conn-b"><strong>Auto-filled from your weekly & daily data.</strong> Numbers, averages, hours are all calculated. You add your 8 area reflections and next month intentions.</div>
+    <div class="card"><div class="ct">Month</div><div class="f"><input type="text" id="m-month" placeholder="e.g. March 2026"></div></div>
+    <div class="card"><div class="ct">This month — auto from your logs</div><div id="m-auto-data"><div class="empty">Log daily to see auto-data here.</div></div></div>
+    <div class="card"><div class="ct">Learning hours this month</div>
+      <div class="rl">How many hours did you put into each area this month?</div>
+      <div class="f"><label class="fl">Finance class (hours)</label><div class="sr"><input type="range" min="0" max="80" step="1" value="0" id="sl-fin" oninput="sv('sl-fin','o-fin','h')"><span class="sv" id="o-fin">0h</span></div></div>
+      <div class="f"><label class="fl">MA Philosophy — IGNOU (hours)</label><div class="sr"><input type="range" min="0" max="80" step="1" value="0" id="sl-ma" oninput="sv('sl-ma','o-ma','h')"><span class="sv" id="o-ma">0h</span></div></div>
+      <div class="f"><label class="fl">All Sow Great — company (hours)</label><div class="sr"><input type="range" min="0" max="160" step="1" value="0" id="sl-asg" oninput="sv('sl-asg','o-asg','h')"><span class="sv" id="o-asg">0h</span></div></div>
+      <div class="f"><label class="fl">New skills / things learned this month</label><textarea id="m-skills" placeholder="Any new concept, tool, skill, insight you gained..."></textarea></div>
+    </div>
+    <div class="card"><div class="ct">8 life areas — reflect on this month</div>
+      <div class="rl">Auto stats shown for each area. Write your honest reflection below each one.</div>
+      <div class="f"><label class="fl">Spiritual / soul</label><div class="stat-inline" id="m-med-stat">Loading...</div><textarea id="m-spiritual" placeholder="Meditation, faith, inner peace, what fed your soul..."></textarea></div>
+      <div class="f"><label class="fl">Career / work</label><div class="stat-inline" id="m-work-stat">Loading...</div><textarea id="m-career" placeholder="Work wins, All Sow Great progress, challenges..."></textarea></div>
+      <div class="f"><label class="fl">Health & fitness</label><div class="stat-inline" id="m-fit-stat">Loading...</div><textarea id="m-health" placeholder="Body, energy, workout consistency..."></textarea></div>
+      <div class="f"><label class="fl">Love / family</label><textarea id="m-love" placeholder="Relationships, family time, connection..."></textarea></div>
+      <div class="f"><label class="fl">Personal growth</label><div class="stat-inline" id="m-learn-stat">Loading...</div><textarea id="m-growth" placeholder="Finance class, IGNOU, new skills, who are you becoming..."></textarea></div>
+      <div class="f"><label class="fl">Fun / recreation</label><textarea id="m-fun" placeholder="Joy, hobbies, adventures..."></textarea></div>
+      <div class="f"><label class="fl">Social</label><textarea id="m-social" placeholder="Friends, community, connections..."></textarea></div>
+      <div class="f"><label class="fl">Finances</label><textarea id="m-finances" placeholder="Money, savings, spending decisions..."></textarea></div>
+    </div>
+    <div class="card"><div class="ct">Monthly reflection & intentions</div>
+      <div class="f"><label class="fl">Biggest win this month</label><textarea id="m-win" placeholder="What are you most proud of?"></textarea></div>
+      <div class="f"><label class="fl">Biggest lesson</label><textarea id="m-lesson" placeholder="What did this month teach you?"></textarea></div>
+      <div class="f"><label class="fl">What to continue</label><textarea id="m-continue" placeholder="Keep doing this..."></textarea></div>
+      <div class="f"><label class="fl">What to stop</label><textarea id="m-stop" placeholder="Drop this next month..."></textarea></div>
+      <div class="f"><label class="fl">What to start next month</label><textarea id="m-start" placeholder="New habit, intention, goal for next month..."></textarea></div>
+      <div class="f"><label class="fl">Next month intentions</label><textarea id="m-intentions" placeholder="How do you want next month to feel? What's your one focus?"></textarea></div>
+      <div class="f"><label class="fl">Next month goals</label><textarea id="m-next-goals" placeholder="Specific goals for next month — finance class target, IGNOU modules, fitness milestone..."></textarea></div>
+      <div class="f"><label class="fl">Gratitude for this month</label><textarea id="m-gratitude" placeholder="What are you grateful for?"></textarea></div>
+      <div class="f"><label class="fl">Month rating</label><div class="rr" id="r-month"></div></div>
+    </div>
+    <button class="sbtn" id="btn-month" onclick="saveMonthly()">Save monthly review →</button>
+    <div class="sync-st" id="sync-month"></div>
+  </div>
+
+  <!-- QUARTERLY -->
+  <div id="view-quarterly" class="view">
+    <div class="conn-b"><strong>Auto-filled from 3 months of data.</strong> Big picture review — the data does the heavy lifting, you reflect on who you're becoming.</div>
+    <div class="card"><div class="ct">Quarter</div>
+      <div class="f"><div class="tr"><button class="tg" onclick="tgSingle(this,'qtr')">Q1 — Jan/Feb/Mar</button><button class="tg" onclick="tgSingle(this,'qtr')">Q2 — Apr/May/Jun</button><button class="tg" onclick="tgSingle(this,'qtr')">Q3 — Jul/Aug/Sep</button><button class="tg" onclick="tgSingle(this,'qtr')">Q4 — Oct/Nov/Dec</button></div></div>
+    </div>
+    <div class="card"><div class="ct">This quarter — auto from your logs</div><div id="q-auto-data"><div class="empty">No data for this quarter yet.</div></div></div>
+    <div class="card"><div class="ct">Goal progress this quarter</div><div id="q-goal-progress"></div></div>
+    <div class="card"><div class="ct">Quarterly reflection</div>
+      <div class="f"><label class="fl">Biggest wins this quarter</label><textarea id="q-wins" placeholder="What are you most proud of across these 3 months?"></textarea></div>
+      <div class="f"><label class="fl">What shifted in you?</label><textarea id="q-shift" placeholder="How have you grown? What's different about you?"></textarea></div>
+      <div class="f"><label class="fl">What didn't work?</label><textarea id="q-didnt" placeholder="Honest reflection — what fell short and why?"></textarea></div>
+      <div class="f"><label class="fl">What surprised you?</label><textarea id="q-surprise" placeholder="Things you didn't expect — good or bad..."></textarea></div>
+      <div class="f"><label class="fl">Skills & knowledge gained</label><textarea id="q-skills" placeholder="Finance class progress, IGNOU modules, new skills..."></textarea></div>
+      <div class="f"><label class="fl">Next quarter — 3 big goals</label><textarea id="q-next" placeholder="What do you want to achieve / feel / become?"></textarea></div>
+      <div class="f"><label class="fl">One word for this quarter</label><input type="text" id="q-word" placeholder="e.g. Growth, Clarity, Foundation..."></div>
+      <div class="f"><label class="fl">Quarter rating</label><div class="rr" id="r-quarter"></div></div>
+    </div>
+    <button class="sbtn" id="btn-quarter" onclick="saveQuarterly()">Save quarterly review →</button>
+    <div class="sync-st" id="sync-quarter"></div>
+  </div>
+
+  <!-- GOALS -->
+  <div id="view-goals" class="view">
+    <div id="live-goals"></div>
+    <div class="card"><div class="ct">Add a goal</div>
+      <div class="f"><label class="fl">Goal title</label><input type="text" id="g-title" placeholder="e.g. Finish Finance module 3, lose 5kg..."></div>
+      <div class="f"><label class="fl">Type</label><div class="tr"><button class="tg" onclick="tgSingle(this,'gtype')">Monthly</button><button class="tg" onclick="tgSingle(this,'gtype')">Quarterly</button><button class="tg on" onclick="tgSingle(this,'gtype')">Yearly</button></div></div>
+      <div class="f"><label class="fl">Period</label><input type="text" id="g-period" placeholder="e.g. Q1 2026 or March 2026 or 2026"></div>
+      <div class="f"><label class="fl">Track progress using</label><div class="tr"><button class="tg" onclick="tgSingle(this,'gmet')">Workout days</button><button class="tg" onclick="tgSingle(this,'gmet')">Learning hours</button><button class="tg" onclick="tgSingle(this,'gmet')">Deep work hours</button><button class="tg" onclick="tgSingle(this,'gmet')">Meditation days</button><button class="tg" onclick="tgSingle(this,'gmet')">Books read</button><button class="tg" onclick="tgSingle(this,'gmet')">Manual</button></div></div>
+      <div class="f"><label class="fl">Related to</label><div class="tr"><button class="tg" onclick="tgSingle(this,'grel')">Finance class</button><button class="tg" onclick="tgSingle(this,'grel')">MA Philosophy IGNOU</button><button class="tg" onclick="tgSingle(this,'grel')">All Sow Great</button><button class="tg" onclick="tgSingle(this,'grel')">Health</button><button class="tg" onclick="tgSingle(this,'grel')">Personal</button><button class="tg" onclick="tgSingle(this,'grel')">Other</button></div></div>
+      <div class="g2">
+        <div class="f"><label class="fl">Target (hours or days)</label><input type="number" id="g-target" placeholder="e.g. 120" min="0"></div>
+        <div class="f"><label class="fl">Manual progress</label><input type="number" id="g-manual" placeholder="0" min="0"></div>
+      </div>
+      <div class="f"><label class="fl">What I want to achieve / learn</label><textarea id="g-what" placeholder="What will success look like?"></textarea></div>
+      <div class="f"><label class="fl">Next action step</label><textarea id="g-next" placeholder="The very next thing to do..."></textarea></div>
+      <button class="sbtn" id="btn-goal" onclick="saveGoal()">Save goal →</button>
+      <div class="sync-st" id="sync-goal"></div>
+    </div>
+    <div class="card"><div class="ct">All goals</div>
+      <div class="tab-row" id="goal-tabs">
+        <button class="tab-btn active" onclick="filterGoals('all',this)">All</button>
+        <button class="tab-btn" onclick="filterGoals('Monthly',this)">Monthly</button>
+        <button class="tab-btn" onclick="filterGoals('Quarterly',this)">Quarterly</button>
+        <button class="tab-btn" onclick="filterGoals('Yearly',this)">Yearly</button>
+      </div>
+      <div id="goals-list"><div class="empty">No custom goals yet.</div></div>
+    </div>
+  </div>
+
+  <!-- YEAR DASHBOARD -->
+  <div id="view-dashboard" class="view">
+    <div class="conn-b"><strong>Your year in data.</strong> Every number pulled from your daily logs automatically.</div>
+    <div class="g4" id="dash-metrics"></div>
+    <div class="card"><div class="ct">Activity heatmap — <span id="hm-year"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:5px"><span>Jan</span><span>Apr</span><span>Jul</span><span>Oct</span><span>Dec</span></div>
+      <div class="hm-grid" id="year-heatmap"></div>
+    </div>
+    <div class="card"><div class="ct">Life areas average</div><div id="life-areas"></div></div>
+    <div class="card"><div class="ct">Goal progress</div><div id="dash-goals"></div></div>
+    <div class="card"><div class="ct">Mood & energy — last 14 days</div><div style="height:130px;position:relative"><canvas id="trend-chart"></canvas></div></div>
+    <div class="card"><div class="ct">Meal quality this year</div><div id="meal-breakdown"></div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+
+const GAS_URL='https://script.google.com/macros/s/AKfycbxwHsZI0bozqs18B7NjvDMaf5idIgrAhbKYcvpfyXlYtCLCSymbwQfHq2Aq9t-Y_vRkQg/exec';
+
+
+const QUOTES=['Small steps every day build the life you want.','You don\'t rise to your goals — you fall to your systems.','Track your life or your life tracks you.','Every day is data. Collect it.','Progress, not perfection.','Your future self is watching through your memories.','What gets measured gets managed.','Show up. Even on the bad days.','Discipline is choosing what you want most over what you want now.','The secret of getting ahead is getting started.','You are the average of what you do every day.','Small habits compound into big lives.'];
+
+let days=JSON.parse(localStorage.getItem('pg_days')||'{}');
+let habits=JSON.parse(localStorage.getItem('pg_habits')||'[]');
+let books=JSON.parse(localStorage.getItem('pg_books')||'[]');
+let foodLog=JSON.parse(localStorage.getItem('pg_food')||'{}');
+let goals=JSON.parse(localStorage.getItem('pg_goals')||'[]');
+let weeks=JSON.parse(localStorage.getItem('pg_weeks')||'{}');
+let months=JSON.parse(localStorage.getItem('pg_months')||'{}');
+
+async function saveToSheets(tab, row){
+  try{
+    const r=await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({tab,row})});
+    const d=await r.json();
+    if(d.status!=='ok')throw new Error(d.message||'Unknown error');
+    return d;
+  }catch(e){throw e;}
+}
+
+
+
+// SAVE DAY
+async function saveDay(){
+  const btn=document.getElementById('btn-day');btn.disabled=true;btn.textContent='Saving...';
+  const key=todayKey();
+  const habCard=document.getElementById('daily-habit-checks');
+  const checkedHabs=getTogs(habCard);
+  const morningCard=document.querySelector('#view-daily .card:first-child');
+  const badCard=document.querySelectorAll('#view-daily .card')[5];
+  const entry={
+    wake:document.getElementById('d-wake').value,
+    morningRituals:getTogs(morningCard),morningRating:getRating('r-morning'),
+    deepWork:parseFloat(document.getElementById('sl-dw').value)||0,
+    tasks:document.getElementById('d-tasks').value,learn:document.getElementById('d-learn').value,
+    learnTime:parseFloat(document.getElementById('sl-lt').value)||0,workRating:getRating('r-work'),
+    water:parseFloat(document.getElementById('sl-wt').value)||0,
+    workoutDuration:parseFloat(document.getElementById('sl-wd').value)||0,
+    sleep:parseFloat(document.getElementById('sl-sl').value)||7,
+    sleepTime:document.getElementById('d-sleeptime').value,sleepRating:getRating('r-sleep'),
+    mood:getRating('r-mood'),energy:getRating('r-energy'),stress:getRating('r-stress'),
+    moodNote:document.getElementById('d-mood-note').value,
+    instagram:parseFloat(document.getElementById('sl-ig').value)||0,
+    youtube:parseFloat(document.getElementById('sl-yt').value)||0,
+    badHabits:getTogs(badCard),habitsChecked:checkedHabs,
+    win:document.getElementById('d-win').value,improve:document.getElementById('d-improve').value,
+    grateful:document.getElementById('d-grateful').value,book:document.getElementById('d-book').value,
+    dayRating:getRating('r-day'),notes:document.getElementById('d-notes').value,ts:Date.now()
+  };
+  habits.forEach(h=>{if(!h.log)h.log={};h.log[key]=checkedHabs.includes(h.name);});
+  // preserve existing spends array if re-saving same day
+  if(days[key]&&days[key].spends)entry.spends=days[key].spends;
+  days[key]=entry;save('pg_days',days);save('pg_habits',habits);
+  try{
+    await saveToSheets('Daily Log',{
+      Date:key,Wake:entry.wake,MorningRituals:(entry.morningRituals||[]).join(', '),
+      MorningRating:entry.morningRating,DeepWork:entry.deepWork,Tasks:entry.tasks,
+      Learn:entry.learn,LearnMins:entry.learnTime,WorkRating:entry.workRating,
+      Water:entry.water,WorkoutMins:entry.workoutDuration,Sleep:entry.sleep,
+      SleepTime:entry.sleepTime,SleepQuality:entry.sleepRating,
+      Mood:entry.mood,Energy:entry.energy,Stress:entry.stress,MoodNote:entry.moodNote,
+      Instagram:entry.instagram,YouTube:entry.youtube,BadHabits:(entry.badHabits||[]).join(', '),
+      Win:entry.win,Improve:entry.improve,Grateful:entry.grateful,
+      Book:entry.book,DayRating:entry.dayRating,Notes:entry.notes
+    });
+    setSync('sync-day','Synced to Google Sheets ✓');showToast('Day saved!');
+  }catch(e){setSync('sync-day','Saved locally (sheets sync failed)',false);showToast('Saved locally',true);}
+  btn.disabled=false;btn.textContent='Save today\'s log →';
+}
+
+// WEEKLY AUTO
+function renderWeekAuto(){
+  const p=computePeriod(getWeekKeys());
+  const c=document.getElementById('w-auto-data');
+  if(!p||!p.days){c.innerHTML='<div class="empty">No daily logs for this week yet.</div>';return;}
+  c.innerHTML=`
+    <div class="ar"><span class="ar-l">Days logged</span><span class="ar-v">${p.days}/7</span></div>
+    <div class="ar"><span class="ar-l">Avg mood</span><span class="ar-v">${p.avgMood}/10</span></div>
+    <div class="ar"><span class="ar-l">Avg energy</span><span class="ar-v">${p.avgEnergy}/10</span></div>
+    <div class="ar"><span class="ar-l">Avg stress</span><span class="ar-v">${p.avgStress}/10</span></div>
+    <div class="ar"><span class="ar-l">Deep work hours</span><span class="ar-v">${p.totalDW}h</span></div>
+    <div class="ar"><span class="ar-l">Learning time</span><span class="ar-v">${p.totalLearnHrs}h</span></div>
+    <div class="ar"><span class="ar-l">Workout days</span><span class="ar-v">${p.workoutDays}/7</span></div>
+    <div class="ar"><span class="ar-l">Meditation days</span><span class="ar-v">${p.meditationDays}/7</span></div>
+    <div class="ar"><span class="ar-l">Avg sleep</span><span class="ar-v">${p.avgSleep}h</span></div>
+    <div class="ar"><span class="ar-l">Avg day rating</span><span class="ar-v">${p.avgDayRating}/10</span></div>`;
+}
+
+function renderWeekBars(){
+  const keys=getWeekKeys();const bar=document.getElementById('w-day-bars');bar.innerHTML='';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach((n,i)=>{
+    const e=days[keys[i]];const r=e?(e.dayRating||0):0;
+    const div=document.createElement('div');div.className='wk-c';
+    div.innerHTML=`<div class="wk-l">${n}</div><div class="wk-b"><div class="wk-f" style="height:${Math.round(r/10*100)}%"></div></div><div class="wk-v">${r||'–'}</div>`;
+    bar.appendChild(div);
+  });
+}
+
+function renderWeekHabits(){
+  const keys=getWeekKeys();const c=document.getElementById('w-habit-dots');c.innerHTML='';
+  if(!habits.length){c.innerHTML='<div class="empty">No habits tracked yet.</div>';return;}
+  habits.forEach(h=>{
+    const row=document.createElement('div');row.className='hab-row';
+    let dots='<div class="dot-row">';
+    keys.forEach((k,i)=>{dots+=`<div class="dot${h.log&&h.log[k]?' done':''}" title="${['M','T','W','T','F','S','S'][i]}"></div>`;});
+    dots+='</div>';
+    row.innerHTML=`<div><div class="hab-n">${h.name}</div>${dots}</div><div style="font-size:13px;color:var(--t3)">${getStreak(h)}d</div>`;
+    c.appendChild(row);
+  });
+}
+
+async function saveWeek(){
+  const btn=document.getElementById('btn-week');btn.disabled=true;btn.textContent='Saving...';
+  const keys=getWeekKeys();const p=computePeriod(keys);
+  const weekLabel='Week of '+new Date(keys[0]+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  const entry={wins:document.getElementById('w-wins').value,drain:document.getElementById('w-drain').value,energy:document.getElementById('w-nrg').value,next:document.getElementById('w-next').value,rating:getRating('r-week'),weekOf:keys[0],computed:p};
+  weeks[keys[0]]=entry;save('pg_weeks',weeks);
+  try{
+    await saveToSheets('Weekly Review',{
+      Week:weekLabel,Rating:entry.rating,Wins:entry.wins,Drain:entry.drain,
+      Energy:entry.energy,Next:entry.next,
+      AvgMood:p?p.avgMood:0,AvgEnergy:p?p.avgEnergy:0,
+      WorkoutDays:p?p.workoutDays:0,MeditationDays:p?p.meditationDays:0,
+      DeepWorkHrs:p?p.totalDW:0
+    });
+    setSync('sync-week','Synced to Google Sheets ✓');showToast('Weekly review saved!');
+  }catch(e){setSync('sync-week','Saved locally',false);showToast('Saved locally',true);}
+  btn.disabled=false;btn.textContent='Save weekly review →';
+}
+
+// MONTHLY AUTO
+function prefillMonth(){const now=new Date();const label=now.toLocaleDateString('en-IN',{month:'long',year:'numeric'});if(!document.getElementById('m-month').value)document.getElementById('m-month').value=label;}
+
+function renderMonthAuto(){
+  const mStr=thisMonth();const keys=getMonthKeys(mStr);const p=computePeriod(keys);
+  const c=document.getElementById('m-auto-data');
+  if(!p||!p.days){
+    c.innerHTML='<div class="empty">No daily logs for this month yet — keep logging daily!</div>';
+    ['m-med-stat','m-work-stat','m-fit-stat','m-learn-stat'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='No data yet — log daily!';});
+    return;
+  }
+  const booksThisMonth=books.filter(b=>b.date&&b.date.startsWith(mStr)).length;
+  c.innerHTML=`
+    <div class="ar"><span class="ar-l">Days logged</span><span class="ar-v">${p.days}</span></div>
+    <div class="ar"><span class="ar-l">Avg mood</span><span class="ar-v">${p.avgMood}/10</span></div>
+    <div class="ar"><span class="ar-l">Avg energy</span><span class="ar-v">${p.avgEnergy}/10</span></div>
+    <div class="ar"><span class="ar-l">Avg stress</span><span class="ar-v">${p.avgStress}/10</span></div>
+    <div class="ar"><span class="ar-l">Avg day rating</span><span class="ar-v">${p.avgDayRating}/10</span></div>
+    <div class="ar"><span class="ar-l">Total deep work</span><span class="ar-v">${p.totalDW}h</span></div>
+    <div class="ar"><span class="ar-l">Total learning</span><span class="ar-v">${p.totalLearnHrs}h</span></div>
+    <div class="ar"><span class="ar-l">Workout days</span><span class="ar-v">${p.workoutDays}</span></div>
+    <div class="ar"><span class="ar-l">Meditation days</span><span class="ar-v">${p.meditationDays}</span></div>
+    <div class="ar"><span class="ar-l">Journaling days</span><span class="ar-v">${p.journalDays}</span></div>
+    <div class="ar"><span class="ar-l">Cold shower days</span><span class="ar-v">${p.coldDays}</span></div>
+    <div class="ar"><span class="ar-l">Avg sleep</span><span class="ar-v">${p.avgSleep}h</span></div>
+    <div class="ar"><span class="ar-l">Avg water</span><span class="ar-v">${p.avgWater} glasses</span></div>
+    <div class="ar"><span class="ar-l">Books logged</span><span class="ar-v">${booksThisMonth}</span></div>`;
+  const el=id=>document.getElementById(id);
+  if(el('m-med-stat'))el('m-med-stat').textContent=`${p.meditationDays} meditation days · ${p.journalDays} journaling days`;
+  if(el('m-work-stat'))el('m-work-stat').textContent=`${p.totalDW}h deep work · avg work energy ${p.avgWorkRating}/10`;
+  if(el('m-fit-stat'))el('m-fit-stat').textContent=`${p.workoutDays} workout days · avg sleep ${p.avgSleep}h · avg water ${p.avgWater} glasses`;
+  if(el('m-learn-stat'))el('m-learn-stat').textContent=`${p.totalLearnHrs}h learning logged · ${booksThisMonth} books this month`;
+}
+
+async function saveMonthly(){
+  const btn=document.getElementById('btn-month');btn.disabled=true;btn.textContent='Saving...';
+  const mStr=thisMonth();const keys=getMonthKeys(mStr);const p=computePeriod(keys);
+  const month=document.getElementById('m-month').value||new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const entry={month,finHours:parseFloat(document.getElementById('sl-fin').value)||0,maHours:parseFloat(document.getElementById('sl-ma').value)||0,asgHours:parseFloat(document.getElementById('sl-asg').value)||0,skills:document.getElementById('m-skills').value,spiritual:document.getElementById('m-spiritual').value,career:document.getElementById('m-career').value,health:document.getElementById('m-health').value,love:document.getElementById('m-love').value,growth:document.getElementById('m-growth').value,fun:document.getElementById('m-fun').value,social:document.getElementById('m-social').value,finances:document.getElementById('m-finances').value,win:document.getElementById('m-win').value,lesson:document.getElementById('m-lesson').value,continue:document.getElementById('m-continue').value,stop:document.getElementById('m-stop').value,start:document.getElementById('m-start').value,intentions:document.getElementById('m-intentions').value,nextGoals:document.getElementById('m-next-goals').value,gratitude:document.getElementById('m-gratitude').value,rating:getRating('r-month'),computed:p};
+  months[month]=entry;save('pg_months',months);
+  try{
+    await saveToSheets('Monthly Review',{
+      Month:month,Rating:entry.rating,AvgMood:p?p.avgMood:0,AvgEnergy:p?p.avgEnergy:0,
+      DaysLogged:p?p.days:0,FinanceHrs:entry.finHours,IGNOUHrs:entry.maHours,
+      ASGHrs:entry.asgHours,Skills:entry.skills,
+      Spiritual:entry.spiritual,Career:entry.career,Health:entry.health,
+      Love:entry.love,Growth:entry.growth,Fun:entry.fun,Social:entry.social,
+      Finances:entry.finances,BiggestWin:entry.win,Lesson:entry.lesson,
+      Continue:entry.continue,Stop:entry.stop,Start:entry.start,
+      Intentions:entry.intentions,NextGoals:entry.nextGoals,Gratitude:entry.gratitude
+    });
+    setSync('sync-month','Synced to Google Sheets ✓');showToast('Monthly review saved!');
+  }catch(e){setSync('sync-month','Saved locally',false);showToast('Saved locally',true);}
+  btn.disabled=false;btn.textContent='Save monthly review →';
+}
+
+// QUARTERLY AUTO
+function getQtrMonths(){
+  const m=new Date().getMonth();const q=Math.floor(m/3);const yr=new Date().getFullYear();
+  return [[0,1,2],[3,4,5],[6,7,8],[9,10,11]][q].map(mo=>yr+'-'+String(mo+1).padStart(2,'0'));
+}
+
+function renderQuarterAuto(){
+  const qM=getQtrMonths();const allKeys=qM.flatMap(m=>getMonthKeys(m));const p=computePeriod(allKeys);
+  const c=document.getElementById('q-auto-data');
+  if(!p||!p.days){c.innerHTML='<div class="empty">No data for this quarter yet.</div>';return;}
+  const qBooks=books.filter(b=>b.date&&qM.some(m=>b.date.startsWith(m))).length;
+  const wReviews=Object.values(weeks).filter(w=>w.weekOf&&qM.some(m=>w.weekOf.startsWith(m))).length;
+  const weekWins=Object.values(weeks).filter(w=>w.weekOf&&qM.some(m=>w.weekOf.startsWith(m))&&w.wins).map(w=>w.wins);
+
+  // pull monthly learning hours from saved monthly reviews
+  const mData=Object.values(months).filter(m=>m.month&&qM.some(q=>{try{return new Date(m.month+' 1').toLocaleDateString('en-IN',{year:'numeric',month:'2-digit'}).includes(q.split('-')[1]);}catch(e){return false;}}));
+  const totalFin=mData.reduce((s,m)=>s+(m.finHours||0),0);
+  const totalMa=mData.reduce((s,m)=>s+(m.maHours||0),0);
+  const totalAsg=mData.reduce((s,m)=>s+(m.asgHours||0),0);
+
+  c.innerHTML=`
+    <div class="ar"><span class="ar-l">Days logged</span><span class="ar-v">${p.days}</span></div>
+    <div class="ar"><span class="ar-l">Avg mood</span><span class="ar-v">${p.avgMood}/10</span></div>
+    <div class="ar"><span class="ar-l">Avg energy</span><span class="ar-v">${p.avgEnergy}/10</span></div>
+    <div class="ar"><span class="ar-l">Avg day rating</span><span class="ar-v">${p.avgDayRating}/10</span></div>
+    <div class="ar"><span class="ar-l">Total deep work</span><span class="ar-v">${p.totalDW}h</span></div>
+    <div class="ar"><span class="ar-l">Total learning</span><span class="ar-v">${p.totalLearnHrs}h</span></div>
+    <div class="ar"><span class="ar-l">Workout days</span><span class="ar-v">${p.workoutDays}</span></div>
+    <div class="ar"><span class="ar-l">Meditation days</span><span class="ar-v">${p.meditationDays}</span></div>
+    <div class="ar"><span class="ar-l">Books read</span><span class="ar-v">${qBooks}</span></div>
+    <div class="ar"><span class="ar-l">Weekly reviews done</span><span class="ar-v">${wReviews}</span></div>
+    ${totalFin||totalMa||totalAsg?`<div style="height:0.5px;background:var(--b1);margin:10px 0"></div><div class="ar"><span class="ar-l">Finance class</span><span class="ar-v">${totalFin}h</span></div><div class="ar"><span class="ar-l">IGNOU</span><span class="ar-v">${totalMa}h</span></div><div class="ar"><span class="ar-l">All Sow Great</span><span class="ar-v">${totalAsg}h</span></div>`:''}
+    ${weekWins.length?`<div style="height:0.5px;background:var(--b1);margin:10px 0"></div><div style="font-size:12px;color:var(--t3);margin-bottom:6px">Weekly wins this quarter</div>${weekWins.map(w=>`<div style="font-size:13px;color:var(--t2);padding:5px 0;border-bottom:0.5px solid var(--b1)">${w.slice(0,120)}${w.length>120?'...':''}</div>`).join('')}`:''}`;
+}
+
+function renderQuarterGoals(){
+  const c=document.getElementById('q-goal-progress');c.innerHTML='';
+  [...SEEDED_GOALS,...goals].forEach(g=>{
+    const m=computeGoalMetric(g);
+    const div=document.createElement('div');div.style.cssText='padding:10px 0;border-bottom:0.5px solid var(--b1)';
+    div.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:3px"><div style="font-size:13px;color:var(--t1)">${g.title}</div>${m.pct!==null?`<div style="font-size:12px;color:var(--gold);font-weight:500">${m.pct}%</div>`:''}</div><div style="font-size:12px;color:var(--t3);margin-bottom:4px">${m.label}</div>${m.pct!==null?`<div class="pb"><div class="pb-f" style="width:${m.pct}%"></div></div>`:''}`;
+    c.appendChild(div);
+  });
+}
+
+async function saveQuarterly(){
+  const btn=document.getElementById('btn-quarter');btn.disabled=true;btn.textContent='Saving...';
+  const qNum=Math.floor(new Date().getMonth()/3)+1;
+  showToast(`Q${qNum} ${new Date().getFullYear()} review saved!`);
+  setSync('sync-quarter','Saved locally ✓');
+  btn.disabled=false;btn.textContent='Save quarterly review →';
+}
+
+// GOALS
+const SEEDED_GOALS=[
+  {id:'fitness',title:'Fitness — lose weight & build strength',metric:'workout',target:260,relatedTo:'Health',category:'Health & Fitness',type:'Yearly'},
+  {id:'finance',title:'Finance class — module by module',metric:'learning',target:120,relatedTo:'Finance class',category:'Finance',type:'Yearly'},
+  {id:'ignou',title:'MA Philosophy IGNOU — complete year 1',metric:'learning',target:200,relatedTo:'MA Philosophy IGNOU',category:'Learning & Study',type:'Yearly'},
+  {id:'asg',title:'All Sow Great — build systems & revenue',metric:'deepwork',target:500,relatedTo:'All Sow Great',category:'Career & Business',type:'Yearly'},
+  {id:'books',title:'Read 24 books this year (2/month)',metric:'books',target:24,relatedTo:'Personal',category:'Personal Growth',type:'Yearly'},
+  {id:'meditation',title:'Daily meditation — build consistent practice',metric:'meditation',target:300,relatedTo:'Personal',category:'Spiritual & Soul',type:'Yearly'},
+];
+
+function computeGoalMetric(goal){
+  const yr=thisYear();const mStr=thisMonth();
+  const yE=Object.entries(days).filter(([k])=>k.startsWith(yr));
+  const mE=Object.entries(days).filter(([k])=>k.startsWith(mStr));
+  let actual=0,label='',monthActual=0,monthLabel='';
+  if(goal.metric==='workout'){
+    const yD=yE.filter(([,e])=>e.habitsChecked&&e.habitsChecked.includes('Workout')).length;
+    const mD=mE.filter(([,e])=>e.habitsChecked&&e.habitsChecked.includes('Workout')).length;
+    actual=yD;label=`${yD} workout days this year`;monthActual=mD;monthLabel=`${mD} this month`;
+  }else if(goal.metric==='learning'){
+    const yH=Math.round(yE.reduce((s,[,e])=>s+(parseFloat(e.learnTime)||0),0)/60*10)/10;
+    const mH=Math.round(mE.reduce((s,[,e])=>s+(parseFloat(e.learnTime)||0),0)/60*10)/10;
+    actual=yH;label=`${yH}h learning this year`;monthActual=mH;monthLabel=`${mH}h this month`;
+  }else if(goal.metric==='deepwork'){
+    const yH=Math.round(yE.reduce((s,[,e])=>s+(parseFloat(e.deepWork)||0),0)*10)/10;
+    const mH=Math.round(mE.reduce((s,[,e])=>s+(parseFloat(e.deepWork)||0),0)*10)/10;
+    actual=yH;label=`${yH}h deep work this year`;monthActual=mH;monthLabel=`${mH}h this month`;
+  }else if(goal.metric==='books'){
+    actual=books.length;label=`${books.length} books logged`;
+    monthActual=books.filter(b=>b.date&&b.date.startsWith(mStr)).length;monthLabel=`${monthActual} this month`;
+  }else if(goal.metric==='meditation'){
+    const yD=yE.filter(([,e])=>e.habitsChecked&&e.habitsChecked.includes('Meditation')).length;
+    const mD=mE.filter(([,e])=>e.habitsChecked&&e.habitsChecked.includes('Meditation')).length;
+    actual=yD;label=`${yD} meditation days this year`;monthActual=mD;monthLabel=`${mD} this month`;
+  }else{actual=goal.hoursSpent||0;label=`${actual} manually logged`;}
+  const pct=goal.target>0?Math.min(100,Math.round(actual/goal.target*100)):null;
+  return{actual,label,monthActual,monthLabel,pct};
+}
+
+function getStreak(h){let s=0;const t=new Date();for(let i=0;i<365;i++){const d=new Date(t);d.setDate(t.getDate()-i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');if(h.log&&h.log[k])s++;else break;}return s;}
+function getStreakForMetric(m){
+  let s=0;const t=new Date();
+  for(let i=0;i<365;i++){const d=new Date(t);d.setDate(t.getDate()-i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const e=days[k];if(!e)break;
+  let hit=false;
+  if(m==='workout')hit=e.habitsChecked&&e.habitsChecked.includes('Workout');
+  else if(m==='meditation')hit=e.habitsChecked&&e.habitsChecked.includes('Meditation');
+  else if(m==='learning')hit=(parseFloat(e.learnTime)||0)>0;
+  else if(m==='deepwork')hit=(parseFloat(e.deepWork)||0)>0;
+  else if(m==='books')hit=!!e.book;
+  else hit=true;
+  if(hit)s++;else break;}return s;
+}
+
+function renderLiveGoals(){
+  const c=document.getElementById('live-goals');c.innerHTML='';
+  [...SEEDED_GOALS,...goals.filter(g=>g.metric)].forEach(goal=>{
+    const m=computeGoalMetric(goal);const streak=getStreakForMetric(goal.metric);
+    const card=document.createElement('div');card.className='card';
+    const pctBar=m.pct!==null?`<div style="display:flex;justify-content:space-between;margin:10px 0 4px"><span style="font-size:12px;color:var(--t3)">${m.label}</span><span style="font-size:12px;color:var(--gold);font-weight:500">${m.pct}%</span></div><div class="pb"><div class="pb-f" style="width:${m.pct}%"></div></div><div style="font-size:11px;color:var(--t3);margin-top:3px">Target: ${goal.target} ${['workout','meditation','books'].includes(goal.metric)?'days/books':'hours'}</div>`:`<div style="margin-top:8px;font-size:12px;color:var(--t2)">${m.label}</div>`;
+    card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:3px"><div style="font-size:14px;font-weight:500;color:var(--t1);flex:1;padding-right:8px">${goal.title}</div><span style="font-size:10px;padding:2px 7px;border-radius:8px;background:var(--gbg);color:#8fd4a4;border:0.5px solid var(--green);flex-shrink:0">${goal.type}</span></div><div style="font-size:12px;color:var(--t3)">${goal.category}${goal.relatedTo?' · '+goal.relatedTo:''}</div>${pctBar}<div style="display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--b1)"><div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--gold);font-family:'DM Serif Display',serif">${m.monthActual||0}</div><div style="font-size:10px;color:var(--t3)">${m.monthLabel||'this month'}</div></div><div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--gold);font-family:'DM Serif Display',serif">${streak}</div><div style="font-size:10px;color:var(--t3)">day streak</div></div><div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--gold);font-family:'DM Serif Display',serif">${Object.keys(days).length}</div><div style="font-size:10px;color:var(--t3)">days logged</div></div></div>`;
+    c.appendChild(card);
+  });
+}
+
+async function saveGoal(){
+  const btn=document.getElementById('btn-goal');btn.disabled=true;btn.textContent='Saving...';
+  const title=document.getElementById('g-title').value.trim();
+  if(!title){btn.disabled=false;btn.textContent='Save goal →';return;}
+  const typeBtn=document.querySelector('#view-goals .tg.on[onclick*="gtype"]');
+  const metBtn=document.querySelector('#view-goals .tg.on[onclick*="gmet"]');
+  const relBtn=document.querySelector('#view-goals .tg.on[onclick*="grel"]');
+  const metMap={'Workout days':'workout','Learning hours':'learning','Deep work hours':'deepwork','Meditation days':'meditation','Books read':'books','Manual':'manual'};
+  const entry={id:Date.now().toString(),title,type:typeBtn?typeBtn.textContent.trim():'Yearly',period:document.getElementById('g-period').value,metric:metBtn?(metMap[metBtn.textContent.trim()]||'manual'):'manual',relatedTo:relBtn?relBtn.textContent.trim():'',target:parseFloat(document.getElementById('g-target').value)||0,hoursSpent:parseFloat(document.getElementById('g-manual').value)||0,what:document.getElementById('g-what').value,next:document.getElementById('g-next').value,date:todayKey()};
+  goals.push(entry);save('pg_goals',goals);renderLiveGoals();renderGoalsList('all');
+  try{
+    const lm=computeGoalMetric(entry);
+    await saveToSheets('Goals',{
+      Goal:entry.title,Type:entry.type,Period:entry.period,
+      Metric:entry.metric,RelatedTo:entry.relatedTo,
+      Target:entry.target,Progress:lm.actual||0,
+      What:entry.what,NextStep:entry.next,Date:entry.date
+    });
+    setSync('sync-goal','Synced to Google Sheets ✓');showToast('Goal saved!');
+  }catch(e){setSync('sync-goal','Saved locally',false);showToast('Saved locally',true);}
+  btn.disabled=false;btn.textContent='Save goal →';
+}
+
+function filterGoals(type,btn){document.querySelectorAll('#goal-tabs .tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGoalsList(type);}
+function renderGoalsList(filter){
+  const c=document.getElementById('goals-list');
+  const f=filter==='all'?goals:goals.filter(g=>g.type===filter);
+  if(!f.length){c.innerHTML='<div class="empty">No custom goals yet. Add one above!</div>';return;}
+  c.innerHTML='';
+  [...f].reverse().forEach(g=>{const m=computeGoalMetric(g);const div=document.createElement('div');div.style.cssText='padding:11px 0;border-bottom:0.5px solid var(--b1)';div.innerHTML=`<div style="font-size:14px;font-weight:500;color:var(--t1);margin-bottom:3px">${g.title}</div><div style="font-size:12px;color:var(--t3);margin-bottom:5px">${g.type||''}${g.period?' · '+g.period:''}${g.relatedTo?' · '+g.relatedTo:''}</div><div style="font-size:12px;color:var(--t2)">${m.label}</div>${m.pct!==null?`<div class="pb" style="margin-top:5px"><div class="pb-f" style="width:${m.pct}%"></div></div><div style="font-size:11px;color:var(--t3);margin-top:2px">${m.pct}% of target</div>`:''}`;c.appendChild(div);});
+}
+
+// HABITS
+function addHabit(){
+  const name=document.getElementById('new-hab-name').value.trim();const type=document.getElementById('new-hab-type').value;
+  if(!name)return;habits.push({name,type,log:{},created:todayKey()});
+  document.getElementById('new-hab-name').value='';save('pg_habits',habits);renderHabits();renderDailyHabitChecks();showToast('Habit added!');
+}
+function removeHabit(i){habits.splice(i,1);save('pg_habits',habits);renderHabits();renderDailyHabitChecks();}
+function renderHabits(){
+  const c=document.getElementById('habit-list');
+  if(!habits.length){c.innerHTML='<div class="empty">No habits yet. Add one below!</div>';renderHabitDots();return;}
+  c.innerHTML='';
+  habits.forEach((h,i)=>{const s=getStreak(h);const div=document.createElement('div');div.className='hab-row';div.innerHTML=`<div><div class="hab-n">${h.name}</div><div class="hab-s"><span class="sp"></span>${s} day streak${h.type==='bad'?' (avoiding)':''}</div></div><button class="rm-btn" onclick="removeHabit(${i})">Remove</button>`;c.appendChild(div);});
+  renderHabitDots();
+}
+function renderHabitDots(){
+  const tabs=document.getElementById('hab-tabs');tabs.innerHTML='';
+  if(!habits.length){document.getElementById('hab-dots').innerHTML='';return;}
+  habits.forEach((h,i)=>{const b=document.createElement('button');b.className='tab-btn'+(i===0?' active':'');b.textContent=h.name;b.onclick=()=>{tabs.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');drawDots(h);};tabs.appendChild(b);});
+  drawDots(habits[0]);
+}
+function drawDots(h){
+  const c=document.getElementById('hab-dots');c.innerHTML='';const row=document.createElement('div');row.className='dot-row';const t=new Date();
+  for(let i=29;i>=0;i--){const d=new Date(t);d.setDate(t.getDate()-i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const dot=document.createElement('div');dot.className='dot'+(h.log&&h.log[k]?' done':'');dot.title=k;row.appendChild(dot);}
+  const lbl=document.createElement('div');lbl.style.cssText='font-size:11px;color:var(--t3);margin-top:8px;display:flex;gap:8px;align-items:center';lbl.innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green)"></span>Done &nbsp;<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--s2);border:0.5px solid var(--b2)"></span>Missed — last 30 days';
+  c.appendChild(row);c.appendChild(lbl);
+}
+function renderDailyHabitChecks(){
+  const c=document.getElementById('daily-habit-checks');
+  if(!habits.length){c.innerHTML='<div class="empty">Add habits in the Habits tab first</div>';return;}
+  c.innerHTML='';const row=document.createElement('div');row.className='tr';
+  habits.forEach(h=>{const b=document.createElement('button');b.className='tg'+(h.type==='bad'?' bad':'');b.textContent=h.name;b.onclick=function(){this.classList.toggle('on');};row.appendChild(b);});
+  c.appendChild(row);
+}
+
+// BOOKS
+async function saveBook(){
+  const btn=document.getElementById('btn-book');btn.disabled=true;btn.textContent='Saving...';
+  const title=document.getElementById('b-title').value.trim();
+  if(!title){btn.disabled=false;btn.textContent='Save book →';return;}
+  const sb=document.querySelector('#view-books .tg.on[onclick*="bs"]');
+  const entry={title,author:document.getElementById('b-author').value,genre:document.getElementById('b-genre').value,pages:parseInt(document.getElementById('b-pages').value)||0,rating:getRating('r-book'),notes:document.getElementById('b-notes').value,status:sb?sb.textContent.trim():'Reading',date:todayKey()};
+  books.push(entry);save('pg_books',books);renderBooks();
+  try{await saveToSheets('Books',{
+      Title:entry.title,Author:entry.author,Genre:entry.genre,
+      Pages:entry.pages,Rating:entry.rating,Status:entry.status,
+      Takeaway:entry.notes,Date:entry.date
+    });setSync('sync-book','Synced to Google Sheets ✓');showToast('Book saved!');}
+  catch(e){setSync('sync-book','Saved locally',false);showToast('Saved locally',true);}
+  btn.disabled=false;btn.textContent='Save book →';
+}
+function renderBooks(){
+  const c=document.getElementById('book-list');
+  if(!books.length){c.innerHTML='<div class="empty">No books logged yet.</div>';return;}
+  c.innerHTML='';
+  [...books].reverse().forEach(b=>{const div=document.createElement('div');div.className='bk-row';const stars='★'.repeat(b.rating||0)+'☆'.repeat(Math.max(0,5-(b.rating||0)));div.innerHTML=`<div class="bk-sp">${(b.title||'?')[0]}</div><div><div class="bk-t">${b.title}</div><div class="bk-m">${b.author||''}${b.genre?' · '+b.genre:''}</div><div class="bk-m" style="color:var(--gold);margin-top:2px">${stars}</div>${b.notes?'<div class="bk-m" style="margin-top:3px">'+b.notes.slice(0,80)+(b.notes.length>80?'...':'')+'</div>':''}</div>`;c.appendChild(div);});
+}
+
+// FOOD
+async function saveFood(){
+  const btn=document.getElementById('btn-food');btn.disabled=true;btn.textContent='Saving...';
+  const key=todayKey();const alcYes=document.getElementById('alc-yes').classList.contains('on');
+  const suppToggles=getTogs(document.getElementById('supp-row'));const suppOther=document.getElementById('f-supp-other').value.trim();
+  const allSupps=suppOther?[...suppToggles,suppOther]:suppToggles;
+  const mqBtn=document.querySelector('#view-food .tg.on[onclick*="mq"]');
+  const entry={mealType,breakfast:document.getElementById('f-breakfast').value,breakfastTime:document.getElementById('f-bt').value,lunch:document.getElementById('f-lunch').value,lunchTime:document.getElementById('f-lt').value,dinner:document.getElementById('f-dinner').value,dinnerTime:document.getElementById('f-dt').value,snacks:document.getElementById('f-snacks').value,supplements:allSupps,alcohol:alcYes,alcoholWhat:document.getElementById('f-alc-what').value,alcoholOccasion:document.getElementById('f-alc-occasion').value,mealQuality:mqBtn?mqBtn.textContent.trim():'',notes:document.getElementById('f-notes').value};
+  foodLog[key]=entry;save('pg_food',foodLog);renderFoodHistory();
+  try{
+    await saveToSheets('Food Log',{
+      Date:key,MealType:entry.mealType,Breakfast:entry.breakfast,BreakfastTime:entry.breakfastTime,
+      Lunch:entry.lunch,LunchTime:entry.lunchTime,Dinner:entry.dinner,DinnerTime:entry.dinnerTime,
+      Snacks:entry.snacks,Supplements:(allSupps||[]).join(', '),
+      Alcohol:entry.alcohol?'Yes':'No',AlcoholWhat:entry.alcoholWhat,
+      MealQuality:entry.mealQuality,Notes:entry.notes
+    });
+    setSync('sync-food','Synced to Google Sheets ✓');showToast('Food saved!');
+  }catch(e){setSync('sync-food','Saved locally',false);showToast('Saved locally',true);}
+  btn.disabled=false;btn.textContent='Save food log →';
+}
+function renderFoodHistory(){
+  const c=document.getElementById('food-history');const entries=Object.entries(foodLog).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
+  if(!entries.length){c.innerHTML='<div class="empty">No food entries yet.</div>';return;}
+  c.innerHTML='';
+  entries.forEach(([date,f])=>{const d=new Date(date+'T00:00:00');const label=d.toLocaleDateString('en-IN',{weekday:'short',month:'short',day:'numeric'});const div=document.createElement('div');div.className='fl-e';let html=`<div class="fl-d">${label}</div>`;[['Breakfast',f.breakfast,f.breakfastTime],['Lunch',f.lunch,f.lunchTime],['Dinner',f.dinner,f.dinnerTime],['Snacks',f.snacks,'']].forEach(([n,v,t])=>{if(v)html+=`<div class="fl-r"><div class="fl-ll">${n}</div><div class="fl-v">${v}${t?` <span style="color:var(--t3);font-size:11px">· ${t}</span>`:''}</div></div>`;});if(f.supplements&&f.supplements.length)html+=`<div style="margin-top:5px">${f.supplements.map(s=>`<span class="pill pill-b">${s}</span>`).join('')}</div>`;if(f.alcohol)html+=`<span class="pill pill-r" style="margin-top:4px;display:inline-block">Alcohol · ${f.alcoholWhat||'yes'}</span>`;if(f.mealQuality)html+=`<div style="font-size:12px;color:var(--t3);margin-top:4px">Quality: ${f.mealQuality}</div>`;div.innerHTML=html;c.appendChild(div);});
+}
+
+// DASHBOARD
+function renderDashboard(){
+  document.getElementById('hm-year').textContent=new Date().getFullYear();
+  const all=Object.values(days);const n=all.length||1;
+  const avg=k=>Math.round(all.reduce((s,e)=>s+(parseFloat(e[k])||0),0)/n*10)/10;
+  document.getElementById('dash-metrics').innerHTML=`<div class="mc"><div class="mc-val">${all.length}</div><div class="mc-lbl">Days logged</div></div><div class="mc"><div class="mc-val">${avg('mood')}</div><div class="mc-lbl">Avg mood</div></div><div class="mc"><div class="mc-val">${avg('energy')}</div><div class="mc-lbl">Avg energy</div></div><div class="mc"><div class="mc-val">${books.length}</div><div class="mc-lbl">Books</div></div>`;
+  const hm=document.getElementById('year-heatmap');hm.innerHTML='';
+  const today=new Date();const soy=new Date(today.getFullYear(),0,1);
+  for(let i=0;i<371;i++){const d=new Date(soy);d.setDate(soy.getDate()+i);if(d>today)break;const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const e=days[k];const cell=document.createElement('div');cell.className='hm-c';if(e){const r=e.dayRating||0;if(r>=8)cell.classList.add('l4');else if(r>=6)cell.classList.add('l3');else if(r>=4)cell.classList.add('l2');else cell.classList.add('l1');}cell.title=k+(e?` · ${e.dayRating||'?'}/10`:'');hm.appendChild(cell);}
+  const areas=[{name:'Health & fitness',keys:['morningRating','sleepRating']},{name:'Work & career',keys:['workRating']},{name:'Mind & mood',keys:['mood','energy']},{name:'Sleep',keys:['sleep','sleepRating']},{name:'Learning',keys:['learnTime']}];
+  const la=document.getElementById('life-areas');la.innerHTML='';
+  areas.forEach(area=>{let tot=0,cnt=0;all.forEach(e=>area.keys.forEach(k=>{if(e[k]){tot+=parseFloat(e[k]);cnt++;}}));const a=cnt?Math.min(10,Math.round(tot/cnt*10)/10):0;const div=document.createElement('div');div.className='ab-row';div.innerHTML=`<div class="ab-l">${area.name}</div><div class="ab-b"><div class="ab-f" style="width:${Math.round(a/10*100)}%"></div></div><div class="ab-v">${a}</div>`;la.appendChild(div);});
+  const dg=document.getElementById('dash-goals');dg.innerHTML='';
+  [...SEEDED_GOALS,...goals].forEach(g=>{const m=computeGoalMetric(g);if(m.pct===null)return;const div=document.createElement('div');div.className='ab-row';div.innerHTML=`<div class="ab-l" style="font-size:11px;width:135px">${g.title.slice(0,26)}${g.title.length>26?'...':''}</div><div class="ab-b"><div class="ab-f" style="width:${m.pct}%"></div></div><div class="ab-v">${m.pct}%</div>`;dg.appendChild(div);});
+  const canvas=document.getElementById('trend-chart');const last14=[];const labels=[];
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const e=days[k];last14.push({mood:e?e.mood:null,energy:e?e.energy:null});labels.push(['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()]);}
+  if(window._tc)window._tc.destroy();
+  window._tc=new Chart(canvas,{type:'line',data:{labels,datasets:[{label:'Mood',data:last14.map(x=>x.mood),borderColor:'#c8a96e',backgroundColor:'transparent',pointRadius:3,tension:.3,spanGaps:true},{label:'Energy',data:last14.map(x=>x.energy),borderColor:'#5a9e6f',backgroundColor:'transparent',pointRadius:3,tension:.3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:10,ticks:{font:{size:10},color:'#5a5754'},grid:{color:'rgba(255,255,255,0.04)'}},x:{ticks:{font:{size:10},color:'#5a5754'},grid:{display:false}}},plugins:{legend:{labels:{font:{size:11},color:'#9a9690',boxWidth:10}}}}});
+  const fv=Object.values(foodLog);const ft=fv.length||1;const fcnt={'Clean & healthy':0,'Mixed':0,'Mostly junk':0};fv.forEach(f=>{if(f.mealQuality&&fcnt[f.mealQuality]!==undefined)fcnt[f.mealQuality]++;});
+  const mb=document.getElementById('meal-breakdown');mb.innerHTML='';
+  [['Clean & healthy','#5a9e6f'],['Mixed','#c8a96e'],['Mostly junk','#c05a5a']].forEach(([label,color])=>{const count=fcnt[label];const pct=Math.round(count/ft*100);const div=document.createElement('div');div.className='ab-row';div.innerHTML=`<div class="ab-l" style="font-size:12px">${label}</div><div class="ab-b"><div class="ab-f" style="width:${pct}%;background:${color}"></div></div><div class="ab-v">${count}d</div>`;mb.appendChild(div);});
+}
+
+// AI NUTRITION ESTIMATE
+async function estimateNutrition(){
+  const btn=document.getElementById('btn-nutrition');
+  const res=document.getElementById('nutrition-result');
+  const meals=[
+    document.getElementById('f-breakfast').value,
+    document.getElementById('f-lunch').value,
+    document.getElementById('f-dinner').value,
+    document.getElementById('f-snacks').value
+  ].filter(Boolean).join(', ');
+  if(!meals){showToast('Add your meals first!',true);return;}
+  btn.textContent='Estimating...';btn.disabled=true;
+  res.style.display='block';res.textContent='Analysing your meals...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        system:'You are a nutrition estimator for Indian meals. Given meal descriptions, estimate protein, carbs, fiber, calories, and overall protein level (Low/Medium/High). Be concise. Format as: Protein: Xg (Level) | Carbs: Xg | Fiber: Xg | Calories: ~X kcal. Then one short insight line.',
+        messages:[{role:'user',content:'Meals today: '+meals+'. Estimate nutrition.'}]
+      })
+    });
+    const d=await r.json();
+    const txt=d.content&&d.content[0]?d.content[0].text:'Could not estimate.';
+    res.textContent=txt;
+    res.style.borderColor='var(--gold)';
+  }catch(e){res.textContent='Could not connect to AI. Check your internet.';}
+  btn.textContent='✦ Auto-estimate protein & nutrition';btn.disabled=false;
+}
+
+// FINANCE
+let savings=JSON.parse(localStorage.getItem('pg_savings')||'[]');
+
+// RATINGS & UI HELPERS
+const RIDS=['r-morning','r-work','r-sleep','r-mood','r-energy','r-stress','r-day','r-week','r-book','r-month','r-quarter'];
+function initRatings(){RIDS.forEach(id=>{const el=document.getElementById(id);if(!el)return;for(let i=1;i<=10;i++){const b=document.createElement('button');b.className='rb';b.textContent=i;b.onclick=()=>{el.querySelectorAll('.rb').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');};el.appendChild(b);}});}
+function getRating(id){const el=document.getElementById(id);if(!el)return 0;const s=el.querySelector('.sel');return s?parseInt(s.textContent):0;}
+function sv(slId,outId,unit){document.getElementById(outId).textContent=parseFloat(document.getElementById(slId).value)+unit;}
+function tg(btn){btn.classList.toggle('on');}
+function tgSingle(btn,grp){btn.closest('.tr').querySelectorAll('.tg').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function alcTog(v){document.getElementById('alc-no').classList.toggle('on',v==='no');document.getElementById('alc-yes').classList.toggle('on',v==='yes');document.getElementById('alc-expand').style.display=v==='yes'?'block':'none';}
+function getTogs(el){return Array.from(el.querySelectorAll('.tg.on')).map(b=>b.textContent.trim());}
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',3000);}
+function setSync(id,msg,ok=true){const el=document.getElementById(id);if(el)el.innerHTML=`<span class="sync-p${ok?'':' err'}"></span>${msg}`;}
+
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='habits')renderHabits();
+  if(name==='books')renderBooks();
+  if(name==='weekly'){renderWeekAuto();renderWeekBars();renderWeekHabits();}
+  if(name==='monthly'){prefillMonth();renderMonthAuto();}
+  if(name==='quarterly'){renderQuarterAuto();renderQuarterGoals();}
+  if(name==='goals'){renderLiveGoals();renderGoalsList('all');}
+  if(name==='food')renderFoodHistory();
+  if(name==='finance')renderFinance();
+  if(name==='dashboard')renderDashboard();
+}
+
+
+function addSpend(){
+  const amt=parseFloat(document.getElementById('d-spend-amt').value)||0;
+  const cat=document.getElementById('d-spend-cat').value;
+  if(!amt){showToast('Enter an amount first',true);return;}
+  const key=todayKey();
+  if(!days[key])days[key]={ts:Date.now()};
+  if(!days[key].spends)days[key].spends=[];
+  days[key].spends.push({amt,cat:cat||'Other',note:document.getElementById('d-spend-note').value,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+  save('pg_days',days);
+  document.getElementById('d-spend-amt').value='';
+  document.getElementById('d-spend-note').value='';
+  renderTodaySpends();
+  showToast('Spend added!');
+}
+
+function renderTodaySpends(){
+  const key=todayKey();
+  const c=document.getElementById('today-spends');
+  if(!c)return;
+  const spends=(days[key]&&days[key].spends)||[];
+  if(!spends.length){c.innerHTML='';return;}
+  const total=spends.reduce((s,x)=>s+x.amt,0);
+  c.innerHTML=spends.map((s,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--b1)">
+      <div><div style="font-size:13px;color:var(--t1)">${s.cat}${s.note?' — '+s.note:''}</div><div style="font-size:11px;color:var(--t3)">${s.time||''}</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:13px;font-weight:500;color:${s.cat==='Online order'?'var(--red)':'var(--gold)'}">₹${s.amt.toLocaleString('en-IN')}</div>
+        <button onclick="removeSpend(${i})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 4px">✕</button>
+      </div>
+    </div>
+  `).join('')+`<div style="font-size:12px;color:var(--t2);padding:6px 0;font-weight:500">Total today: ₹${total.toLocaleString('en-IN')}</div>`;
+}
+
+function removeSpend(i){
+  const key=todayKey();
+  if(!days[key]||!days[key].spends)return;
+  days[key].spends.splice(i,1);
+  save('pg_days',days);renderTodaySpends();
+}
+
+function logSaving(){
+  const amt=parseFloat(document.getElementById('fin-save-amt').value)||0;
+  if(!amt){showToast('Enter an amount first',true);return;}
+  const entry={amt,where:document.getElementById('fin-save-where').value,note:document.getElementById('fin-save-note').value,date:todayKey()};
+  savings.push(entry);save('pg_savings',savings);
+  document.getElementById('fin-save-amt').value='';document.getElementById('fin-save-note').value='';
+  renderFinance();showToast('Saving logged!');
+}
+
+function renderFinance(){
+  const yr=thisYear();const mStr=thisMonth();
+  // total saved this year
+  const totalSaved=savings.filter(s=>s.date&&s.date.startsWith(yr)).reduce((t,s)=>t+s.amt,0);
+  const goal=100000;
+  const pct=Math.min(100,Math.round(totalSaved/goal*100));
+  const remaining=Math.max(0,goal-totalSaved);
+  // goal bar
+  const gb=document.getElementById('fin-goal-bar');
+  if(gb)gb.innerHTML=`<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-bottom:5px"><span>₹0</span><span style="color:var(--gold);font-weight:500">${pct}% saved</span><span>₹1L</span></div><div class="pb"><div class="pb-f" style="width:${pct}%"></div></div>`;
+  const st=document.getElementById('fin-saved-total');if(st)st.textContent='₹'+totalSaved.toLocaleString('en-IN');
+  const rm=document.getElementById('fin-remaining');if(rm)rm.textContent='₹'+remaining.toLocaleString('en-IN');
+
+  // get all daily spends this month + year
+  // flatten all spends from spends arrays
+  const mSpends=Object.entries(days).filter(([k])=>k.startsWith(mStr)).flatMap(([k,e])=>(e.spends||[]).map(s=>({date:k,...s})));
+  const ySpends=Object.entries(days).filter(([k])=>k.startsWith(yr)).flatMap(([k,e])=>(e.spends||[]).map(s=>({date:k,...s})));
+  const mTotal=mSpends.reduce((t,e)=>t+e.amt,0);
+  const mSaved=savings.filter(s=>s.date&&s.date.startsWith(mStr)).reduce((t,s)=>t+s.amt,0);
+
+  // month summary
+  const ms=document.getElementById('fin-month-summary');
+  if(ms)ms.innerHTML=`
+    <div class="ar"><span class="ar-l">Total spent this month</span><span class="ar-v">₹${mTotal.toLocaleString('en-IN')}</span></div>
+    <div class="ar"><span class="ar-l">Saved this month</span><span class="ar-v" style="color:var(--green)">₹${mSaved.toLocaleString('en-IN')}</span></div>
+    <div class="ar"><span class="ar-l">Online orders this month</span><span class="ar-v" style="color:var(--red)">${mSpends.filter(e=>e.cat==='Online order').length} times</span></div>
+    <div class="ar"><span class="ar-l">Days logged</span><span class="ar-v">${mSpends.length}</span></div>
+  `;
+
+  // category breakdown
+  const cats={};mSpends.forEach(e=>{if(e.cat){cats[e.cat]=(cats[e.cat]||0)+e.amt;}});
+  const cb=document.getElementById('fin-cat-breakdown');
+  if(cb){
+    if(!Object.keys(cats).length){cb.innerHTML='<div class="empty">No spends logged this month.</div>';}
+    else{
+      const maxV=Math.max(...Object.values(cats));
+      cb.innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>`
+        <div class="ab-row">
+          <div class="ab-l" style="font-size:12px">${cat}</div>
+          <div class="ab-b"><div class="ab-f" style="width:${Math.round(amt/maxV*100)}%;${cat==='Online order'?'background:var(--red)':''}"></div></div>
+          <div style="font-size:11px;color:var(--t3);white-space:nowrap">₹${amt.toLocaleString('en-IN')}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // online order tracker
+  const ot=document.getElementById('fin-order-tracker');
+  if(ot){
+    const orders=ySpends.filter(e=>e.cat==='Online order');
+    const mOrders=orders.filter(e=>e.date&&e.date.startsWith(mStr));
+    ot.innerHTML=`
+      <div class="ar"><span class="ar-l">This month</span><span class="ar-v" style="color:${mOrders.length>8?'var(--red)':'var(--t1)'}">${mOrders.length} orders</span></div>
+      <div class="ar"><span class="ar-l">This year</span><span class="ar-v">${orders.length} orders</span></div>
+      <div class="ar"><span class="ar-l">Avg per month</span><span class="ar-v">${orders.length?Math.round(orders.length/Math.max(1,new Date().getMonth()+1)):0}</span></div>
+      ${mOrders.length>0?'<div style="margin-top:8px;font-size:12px;color:var(--t3)">'+mOrders.map(o=>o.date+' — ₹'+(o.spendAmt||'?').toLocaleString('en-IN')+(o.spendNote?' ('+o.spendNote+')':'')).join('<br>')+'</div>':''}
+    `;
+  }
+
+  // recent spends
+  const rs=document.getElementById('fin-recent-spends');
+  if(rs){
+    const all=Object.entries(days).filter(([,e])=>e.spendAmt>0).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,15);
+    if(!all.length){rs.innerHTML='<div class="empty">No spends logged yet. Add from Daily tab.</div>';return;}
+    rs.innerHTML=all.map(([date,e])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--b1)">
+        <div><div style="font-size:13px;color:var(--t1)">${e.spendCat||'Other'}${e.spendNote?' — '+e.spendNote:''}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${date}</div></div>
+        <div style="font-size:14px;font-weight:500;color:${e.spendCat==='Online order'?'var(--red)':'var(--gold)'}">₹${e.spendAmt.toLocaleString('en-IN')}</div>
+      </div>
+    `).join('');
+  }
+}
+
+// INIT
+function init(){
+  const h=new Date().getHours();
+  document.getElementById('greeting').textContent=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('datestr').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('quote').textContent='"'+QUOTES[Math.floor(Math.random()*QUOTES.length)]+'"';
+  initRatings();renderDailyHabitChecks();renderTodaySpends();
+}
+init();
+</script>
+</body>
+</html>
