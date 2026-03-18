@@ -476,17 +476,58 @@ let months=JSON.parse(localStorage.getItem('pg_months')||'{}');
 
 async function saveToSheets(tab, row){
   return new Promise((resolve)=>{
-    const s=document.createElement('script');
-    const cb='cb'+Date.now();
-    window[cb]=()=>{delete window[cb];document.head.removeChild(s);resolve();};
-    const data=encodeURIComponent(JSON.stringify({tab,row}));
-    s.src=GAS_URL+'?payload='+data+'&callback='+cb;
-    s.onerror=()=>{delete window[cb];document.head.removeChild(s);resolve();};
-    document.head.appendChild(s);
+    const iframe=document.createElement('iframe');
+    iframe.name='gs_'+Date.now();
+    iframe.style.display='none';
+    document.body.appendChild(iframe);
+    const form=document.createElement('form');
+    form.method='POST';
+    form.action=GAS_URL;
+    form.target=iframe.name;
+    form.style.display='none';
+    const input=document.createElement('input');
+    input.type='hidden';
+    input.name='payload';
+    input.value=JSON.stringify({tab,row});
+    form.appendChild(input);
+    document.body.appendChild(form);
+    setTimeout(()=>{
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
+      resolve();
+    },3000);
+    form.submit();
   });
 }
 
 
+
+
+// CORE DATA HELPERS
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function thisYear(){return new Date().getFullYear().toString();}
+function thisMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function getWeekKeys(){
+  const today=new Date();const mon=new Date(today);mon.setDate(today.getDate()-((today.getDay()+6)%7));
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');});
+}
+function getMonthKeys(mStr){return Object.keys(days).filter(k=>k.startsWith(mStr));}
+function computePeriod(keys){
+  const E=keys.map(k=>days[k]).filter(Boolean);
+  if(!E.length)return null;
+  const avg=k=>Math.round(E.reduce((s,e)=>s+(parseFloat(e[k])||0),0)/E.length*10)/10;
+  const sum=k=>Math.round(E.reduce((s,e)=>s+(parseFloat(e[k])||0),0)*10)/10;
+  const cnt=fn=>E.filter(fn).length;
+  return{
+    days:E.length,
+    avgMood:avg('mood'),avgEnergy:avg('energy'),avgStress:avg('stress'),avgDayRating:avg('dayRating'),avgWorkRating:avg('workRating'),avgSleep:avg('sleep'),avgWater:avg('water'),
+    totalDW:sum('deepWork'),totalLearnMins:sum('learnTime'),totalLearnHrs:Math.round(sum('learnTime')/60*10)/10,
+    workoutDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Workout')),
+    meditationDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Meditation')),
+    journalDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Journaling')),
+    coldDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Cold shower')),
+  };
+}
 
 // SAVE DAY
 async function saveDay(){
@@ -518,7 +559,11 @@ async function saveDay(){
   habits.forEach(h=>{if(!h.log)h.log={};h.log[key]=checkedHabs.includes(h.name);});
   // preserve existing spends array if re-saving same day
   if(days[key]&&days[key].spends)entry.spends=days[key].spends;
+  // SAVE LOCALLY FIRST — instant, never lost even if phone locks
   days[key]=entry;save('pg_days',days);save('pg_habits',habits);
+  btn.disabled=false;btn.textContent='Save today\'s log →';
+  showToast('Day saved!');setSync('sync-day','Saved locally ✓');
+  // SYNC IN BACKGROUND
   try{
     await saveToSheets('Daily Log',{
       Date:key,Wake:entry.wake,MorningRituals:(entry.morningRituals||[]).join(', '),
@@ -778,7 +823,19 @@ async function saveGoal(){
   const relBtn=document.querySelector('#view-goals .tg.on[onclick*="grel"]');
   const metMap={'Workout days':'workout','Learning hours':'learning','Deep work hours':'deepwork','Meditation days':'meditation','Books read':'books','Manual':'manual'};
   const entry={id:Date.now().toString(),title,type:typeBtn?typeBtn.textContent.trim():'Yearly',period:document.getElementById('g-period').value,metric:metBtn?(metMap[metBtn.textContent.trim()]||'manual'):'manual',relatedTo:relBtn?relBtn.textContent.trim():'',target:parseFloat(document.getElementById('g-target').value)||0,hoursSpent:parseFloat(document.getElementById('g-manual').value)||0,what:document.getElementById('g-what').value,next:document.getElementById('g-next').value,date:todayKey()};
-  goals.push(entry);save('pg_goals',goals);renderLiveGoals();renderGoalsList('all');
+  goals.push(entry);save('pg_goals',goals);
+  // Re-enable immediately, show saved
+  btn.disabled=false;btn.textContent='Save goal →';
+  showToast('Goal saved!');
+  renderLiveGoals();renderGoalsList('all');
+  // Clear form
+  document.getElementById('g-title').value='';
+  document.getElementById('g-period').value='';
+  document.getElementById('g-target').value='';
+  document.getElementById('g-manual').value='';
+  document.getElementById('g-what').value='';
+  document.getElementById('g-next').value='';
+  // Sync in background
   try{
     const lm=computeGoalMetric(entry);
     await saveToSheets('Goals',{
@@ -787,9 +844,8 @@ async function saveGoal(){
       Target:entry.target,Progress:lm.actual||0,
       What:entry.what,NextStep:entry.next,Date:entry.date
     });
-    setSync('sync-goal','Synced to Google Sheets ✓');showToast('Goal saved!');
-  }catch(e){setSync('sync-goal','Synced to Google Sheets ✓');showToast('Goal saved!');}
-  btn.disabled=false;btn.textContent='Save goal →';
+    setSync('sync-goal','Synced to Google Sheets ✓');
+  }catch(e){setSync('sync-goal','Saved locally');}
 }
 
 function filterGoals(type,btn){document.querySelectorAll('#goal-tabs .tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGoalsList(type);}
@@ -865,8 +921,14 @@ async function saveFood(){
   const suppToggles=getTogs(document.getElementById('supp-row'));const suppOther=document.getElementById('f-supp-other').value.trim();
   const allSupps=suppOther?[...suppToggles,suppOther]:suppToggles;
   const mqBtn=document.querySelector('#view-food .tg.on[onclick*="mq"]');
+  const mtBtn=document.querySelector('#view-food .tg.on[onclick*="mtype"]');
+  const mealType=mtBtn?mtBtn.textContent.trim():'';
   const entry={mealType,breakfast:document.getElementById('f-breakfast').value,breakfastTime:document.getElementById('f-bt').value,lunch:document.getElementById('f-lunch').value,lunchTime:document.getElementById('f-lt').value,dinner:document.getElementById('f-dinner').value,dinnerTime:document.getElementById('f-dt').value,snacks:document.getElementById('f-snacks').value,supplements:allSupps,alcohol:alcYes,alcoholWhat:document.getElementById('f-alc-what').value,alcoholOccasion:document.getElementById('f-alc-occasion').value,mealQuality:mqBtn?mqBtn.textContent.trim():'',notes:document.getElementById('f-notes').value};
+  // SAVE LOCALLY FIRST — so phone lock never loses data
   foodLog[key]=entry;save('pg_food',foodLog);renderFoodHistory();
+  btn.disabled=false;btn.textContent='Save food log →';
+  showToast('Food saved!');setSync('sync-food','Saved locally ✓');
+  // SYNC IN BACKGROUND — don't wait for it
   try{
     await saveToSheets('Food Log',{
       Date:key,MealType:entry.mealType,Breakfast:entry.breakfast,BreakfastTime:entry.breakfastTime,
@@ -875,9 +937,8 @@ async function saveFood(){
       Alcohol:entry.alcohol?'Yes':'No',AlcoholWhat:entry.alcoholWhat,
       MealQuality:entry.mealQuality,Notes:entry.notes
     });
-    setSync('sync-food','Synced to Google Sheets ✓');showToast('Food saved!');
-  }catch(e){setSync('sync-food','Synced to Google Sheets ✓');showToast('Food saved!');}
-  btn.disabled=false;btn.textContent='Save food log →';
+    setSync('sync-food','Synced to Google Sheets ✓');
+  }catch(e){setSync('sync-food','Saved locally ✓');}
 }
 function renderFoodHistory(){
   const c=document.getElementById('food-history');const entries=Object.entries(foodLog).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
@@ -953,7 +1014,6 @@ function tg(btn){btn.classList.toggle('on');}
 function tgSingle(btn,grp){btn.closest('.tr').querySelectorAll('.tg').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
 function alcTog(v){document.getElementById('alc-no').classList.toggle('on',v==='no');document.getElementById('alc-yes').classList.toggle('on',v==='yes');document.getElementById('alc-expand').style.display=v==='yes'?'block':'none';}
 function getTogs(el){return Array.from(el.querySelectorAll('.tg.on')).map(b=>b.textContent.trim());}
-function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
 function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',3000);}
 function setSync(id,msg,ok=true){const el=document.getElementById(id);if(el)el.innerHTML=`<span class="sync-p${ok?'':' err'}"></span>${msg}`;}
@@ -976,9 +1036,10 @@ function showView(name,btn){
 
 
 function addSpend(){
-  const amt=parseFloat(document.getElementById('d-spend-amt').value)||0;
+  const rawAmt=document.getElementById('d-spend-amt').value.toString().trim();
+  const amt=parseFloat(rawAmt)||0;
   const cat=document.getElementById('d-spend-cat').value;
-  if(!amt){showToast('Enter an amount first',true);return;}
+  if(!amt||amt<=0){showToast('Enter an amount first',true);return;}
   const key=todayKey();
   if(!days[key])days[key]={ts:Date.now()};
   if(!days[key].spends)days[key].spends=[];
@@ -1016,8 +1077,9 @@ function removeSpend(i){
 }
 
 function logSaving(){
-  const amt=parseFloat(document.getElementById('fin-save-amt').value)||0;
-  if(!amt){showToast('Enter an amount first',true);return;}
+  const rawAmt=document.getElementById('fin-save-amt').value.toString().trim();
+  const amt=parseFloat(rawAmt)||0;
+  if(!amt||amt<=0){showToast('Enter an amount first',true);return;}
   const entry={amt,where:document.getElementById('fin-save-where').value,note:document.getElementById('fin-save-note').value,date:todayKey()};
   savings.push(entry);save('pg_savings',savings);
   document.getElementById('fin-save-amt').value='';document.getElementById('fin-save-note').value='';
