@@ -454,6 +454,8 @@ input::placeholder,textarea::placeholder{color:var(--t3);}
     <div class="card"><div class="ct">Goal progress</div><div id="dash-goals"></div></div>
     <div class="card"><div class="ct">Mood & energy — last 14 days</div><div style="height:130px;position:relative"><canvas id="trend-chart"></canvas></div></div>
     <div class="card"><div class="ct">Meal quality this year</div><div id="meal-breakdown"></div></div>
+    <button class="sbtn" id="btn-year" onclick="saveYearSummary()">Save year snapshot to Sheets →</button>
+    <div class="sync-st" id="sync-year"></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -1009,7 +1011,80 @@ function renderDashboard(){
   [['Clean & healthy','#5a9e6f'],['Mixed','#c8a96e'],['Mostly junk','#c05a5a']].forEach(([label,color])=>{const count=fcnt[label];const pct=Math.round(count/ft*100);const div=document.createElement('div');div.className='ab-row';div.innerHTML=`<div class="ab-l" style="font-size:12px">${label}</div><div class="ab-b"><div class="ab-f" style="width:${pct}%;background:${color}"></div></div><div class="ab-v">${count}d</div>`;mb.appendChild(div);});
 }
 
-// AI NUTRITION ESTIMATE
+async function saveYearSummary(){
+  const btn=document.getElementById('btn-year');btn.disabled=true;btn.textContent='Saving...';
+  const yr=thisYear();
+  const all=Object.values(days);
+  const yE=Object.entries(days).filter(([k])=>k.startsWith(yr));
+  const n=yE.length||1;
+  const avg=k=>Math.round(yE.reduce((s,[,e])=>s+(parseFloat(e[k])||0),0)/n*10)/10;
+  const sum=k=>Math.round(yE.reduce((s,[,e])=>s+(parseFloat(e[k])||0),0)*10)/10;
+  const cnt=fn=>yE.filter(([,e])=>fn(e)).length;
+
+  // life area scores
+  const areas=[
+    {name:'Health & Fitness',keys:['morningRating','sleepRating']},
+    {name:'Work & Career',keys:['workRating']},
+    {name:'Mind & Mood',keys:['mood','energy']},
+    {name:'Sleep',keys:['sleep','sleepRating']},
+    {name:'Learning',keys:['learnTime']}
+  ];
+  const areaScores={};
+  areas.forEach(area=>{
+    let tot=0,c=0;
+    yE.forEach(([,e])=>area.keys.forEach(k=>{if(e[k]){tot+=parseFloat(e[k]);c++;}}));
+    areaScores[area.name]=c?Math.min(10,Math.round(tot/c*10)/10):0;
+  });
+
+  // goal progress
+  const goalRows=[...SEEDED_GOALS,...goals].map(g=>{
+    const m=computeGoalMetric(g);
+    return g.title+'→'+(m.pct!==null?m.pct+'%':m.label);
+  }).join(' | ');
+
+  // food quality
+  const fv=Object.values(foodLog);
+  const fcnt={'Clean & healthy':0,'Mixed':0,'Mostly junk':0};
+  fv.forEach(f=>{if(f.mealQuality&&fcnt[f.mealQuality]!==undefined)fcnt[f.mealQuality]++;});
+
+  // total spend this year
+  const ySpendTotal=yE.reduce((t,[,e])=>t+((e.spends||[]).reduce((s,x)=>s+x.amt,0)),0);
+  const totalSavedYr=savings.filter(s=>s.date&&s.date.startsWith(yr)).reduce((t,s)=>t+s.amt,0);
+
+  const row={
+    Year:yr,SavedOn:todayKey(),
+    DaysLogged:yE.length,
+    AvgMood:avg('mood'),AvgEnergy:avg('energy'),AvgStress:avg('stress'),AvgDayRating:avg('dayRating'),
+    AvgSleep:avg('sleep'),AvgWater:avg('water'),
+    TotalDeepWorkHrs:sum('deepWork'),TotalLearningHrs:Math.round(sum('learnTime')/60*10)/10,
+    WorkoutDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Workout')),
+    MeditationDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Meditation')),
+    JournalingDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Journaling')),
+    ColdShowerDays:cnt(e=>e.habitsChecked&&e.habitsChecked.includes('Cold shower')),
+    BooksRead:books.filter(b=>b.date&&b.date.startsWith(yr)).length,
+    TotalSpend:ySpendTotal,TotalSaved:totalSavedYr,
+    MealsClean:fcnt['Clean & healthy'],MealsMixed:fcnt['Mixed'],MealsJunk:fcnt['Mostly junk'],
+    HealthFitnessScore:areaScores['Health & Fitness'],
+    WorkCareerScore:areaScores['Work & Career'],
+    MindMoodScore:areaScores['Mind & Mood'],
+    SleepScore:areaScores['Sleep'],
+    LearningScore:areaScores['Learning'],
+    GoalProgress:goalRows,
+    WeeklyReviewsDone:Object.values(weeks).filter(w=>w.weekOf&&w.weekOf.startsWith(yr)).length,
+    MonthlyReviewsDone:Object.keys(months).length
+  };
+
+  setSync('sync-year','Saving to Google Sheets...');
+  try{
+    await saveToSheets('Year Summary',row);
+    setSync('sync-year','Synced to Google Sheets ✓');
+    showToast('Year snapshot saved!');
+  }catch(e){
+    setSync('sync-year','⚠ Sync failed',false);
+    console.error('Year sync error:',e);
+  }
+  btn.disabled=false;btn.textContent='Save year snapshot to Sheets →';
+}
 async function estimateNutrition(){
   const btn=document.getElementById('btn-nutrition');
   const res=document.getElementById('nutrition-result');
