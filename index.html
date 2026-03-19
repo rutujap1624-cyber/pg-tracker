@@ -460,10 +460,13 @@ input::placeholder,textarea::placeholder{color:var(--t3);}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-
 const GAS_URL='https://script.google.com/macros/s/AKfycbzSQuJt3KBnClDp_0uLxShgGjfeMmjhNrGHJghbXm3ScDWnRj8DS-0CANhqQGMP8bzMTA/exec';
 
-
+async function saveToSheets(tab,row){
+  try{
+    await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tab,row})});
+  }catch(e){console.error('Sheets sync error:',e);throw e;}
+}
 const QUOTES=['Small steps every day build the life you want.','You don\'t rise to your goals — you fall to your systems.','Track your life or your life tracks you.','Every day is data. Collect it.','Progress, not perfection.','Your future self is watching through your memories.','What gets measured gets managed.','Show up. Even on the bad days.','Discipline is choosing what you want most over what you want now.','The secret of getting ahead is getting started.','You are the average of what you do every day.','Small habits compound into big lives.'];
 
 let days=JSON.parse(localStorage.getItem('pg_days')||'{}');
@@ -474,44 +477,45 @@ let goals=JSON.parse(localStorage.getItem('pg_goals')||'[]');
 let weeks=JSON.parse(localStorage.getItem('pg_weeks')||'{}');
 let months=JSON.parse(localStorage.getItem('pg_months')||'{}');
 
-async function saveToSheets(tab, row){
-  return new Promise((resolve)=>{
-    const iframe=document.createElement('iframe');
-    iframe.name='gs_'+Date.now();
-    iframe.style.display='none';
-    document.body.appendChild(iframe);
-    const form=document.createElement('form');
-    form.method='POST';
-    form.action=GAS_URL;
-    form.target=iframe.name;
-    form.style.display='none';
-    const input=document.createElement('input');
-    input.type='hidden';
-    input.name='payload';
-    input.value=JSON.stringify({tab,row});
-    form.appendChild(input);
-    document.body.appendChild(form);
-    setTimeout(()=>{
-      document.body.removeChild(form);
-      document.body.removeChild(iframe);
-      resolve();
-    },3000);
-    form.submit();
-  });
+
+const RIDS=['r-morning','r-work','r-sleep','r-mood','r-energy','r-stress','r-day','r-week','r-book','r-month','r-quarter'];
+function initRatings(){RIDS.forEach(id=>{const el=document.getElementById(id);if(!el)return;for(let i=1;i<=10;i++){const b=document.createElement('button');b.className='rb';b.textContent=i;b.onclick=()=>{el.querySelectorAll('.rb').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');};el.appendChild(b);}});}
+function getRating(id){const el=document.getElementById(id);if(!el)return 0;const s=el.querySelector('.sel');return s?parseInt(s.textContent):0;}
+function sv(slId,outId,unit){document.getElementById(outId).textContent=parseFloat(document.getElementById(slId).value)+unit;}
+function tg(btn){btn.classList.toggle('on');}
+function tgSingle(btn,grp){btn.closest('.tr').querySelectorAll('.tg').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function alcTog(v){document.getElementById('alc-no').classList.toggle('on',v==='no');document.getElementById('alc-yes').classList.toggle('on',v==='yes');document.getElementById('alc-expand').style.display=v==='yes'?'block':'none';}
+function getTogs(el){return Array.from(el.querySelectorAll('.tg.on')).map(b=>b.textContent.trim());}
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',3000);}
+function setSync(id,msg,ok=true){const el=document.getElementById(id);if(el)el.innerHTML=`<span class="sync-p${ok?'':' err'}"></span>${msg}`;}
+
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='habits')renderHabits();
+  if(name==='books')renderBooks();
+  if(name==='weekly'){renderWeekAuto();renderWeekBars();renderWeekHabits();}
+  if(name==='monthly'){prefillMonth();renderMonthAuto();}
+  if(name==='quarterly'){renderQuarterAuto();renderQuarterGoals();}
+  if(name==='goals'){renderLiveGoals();renderGoalsList('all');}
+  if(name==='food')renderFoodHistory();
+  if(name==='finance')renderFinance();
+  if(name==='dashboard')renderDashboard();
 }
 
-
-
-
-// CORE DATA HELPERS
-function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function thisYear(){return new Date().getFullYear().toString();}
-function thisMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+// DATA ENGINE
 function getWeekKeys(){
   const today=new Date();const mon=new Date(today);mon.setDate(today.getDate()-((today.getDay()+6)%7));
   return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');});
 }
 function getMonthKeys(mStr){return Object.keys(days).filter(k=>k.startsWith(mStr));}
+function thisMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function thisYear(){return new Date().getFullYear().toString();}
+
 function computePeriod(keys){
   const E=keys.map(k=>days[k]).filter(Boolean);
   if(!E.length)return null;
@@ -557,13 +561,10 @@ async function saveDay(){
     dayRating:getRating('r-day'),notes:document.getElementById('d-notes').value,ts:Date.now()
   };
   habits.forEach(h=>{if(!h.log)h.log={};h.log[key]=checkedHabs.includes(h.name);});
-  // preserve existing spends array if re-saving same day
   if(days[key]&&days[key].spends)entry.spends=days[key].spends;
-  // SAVE LOCALLY FIRST — instant, never lost even if phone locks
   days[key]=entry;save('pg_days',days);save('pg_habits',habits);
   btn.disabled=false;btn.textContent='Save today\'s log →';
   showToast('Day saved!');setSync('sync-day','Saved locally ✓');
-  // SYNC IN BACKGROUND
   try{
     await saveToSheets('Daily Log',{
       Date:key,Wake:entry.wake,MorningRituals:(entry.morningRituals||[]).join(', '),
@@ -576,8 +577,8 @@ async function saveDay(){
       Win:entry.win,Improve:entry.improve,Grateful:entry.grateful,
       Book:entry.book,DayRating:entry.dayRating,Notes:entry.notes
     });
-    setSync('sync-day','Synced to Google Sheets ✓');showToast('Day saved!');
-  }catch(e){setSync('sync-day','Synced to Google Sheets ✓');showToast('Day saved!');}
+    setSync('sync-day','Synced to Google Sheets ✓');
+  }catch(e){setSync('sync-day','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
   btn.disabled=false;btn.textContent='Save today\'s log →';
 }
 
@@ -628,6 +629,7 @@ async function saveWeek(){
   const weekLabel='Week of '+new Date(keys[0]+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   const entry={wins:document.getElementById('w-wins').value,drain:document.getElementById('w-drain').value,energy:document.getElementById('w-nrg').value,next:document.getElementById('w-next').value,rating:getRating('r-week'),weekOf:keys[0],computed:p};
   weeks[keys[0]]=entry;save('pg_weeks',weeks);
+  showToast('Weekly review saved!');setSync('sync-week','Saved locally ✓');
   try{
     await saveToSheets('Weekly Review',{
       Week:weekLabel,Rating:entry.rating,Wins:entry.wins,Drain:entry.drain,
@@ -636,8 +638,8 @@ async function saveWeek(){
       WorkoutDays:p?p.workoutDays:0,MeditationDays:p?p.meditationDays:0,
       DeepWorkHrs:p?p.totalDW:0
     });
-    setSync('sync-week','Synced to Google Sheets ✓');showToast('Weekly review saved!');
-  }catch(e){setSync('sync-week','Synced to Google Sheets ✓');showToast('Weekly saved!');}
+    setSync('sync-week','Synced to Google Sheets ✓');
+  }catch(e){setSync('sync-week','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
   btn.disabled=false;btn.textContent='Save weekly review →';
 }
 
@@ -681,19 +683,18 @@ async function saveMonthly(){
   const month=document.getElementById('m-month').value||new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
   const entry={month,finHours:parseFloat(document.getElementById('sl-fin').value)||0,maHours:parseFloat(document.getElementById('sl-ma').value)||0,asgHours:parseFloat(document.getElementById('sl-asg').value)||0,skills:document.getElementById('m-skills').value,spiritual:document.getElementById('m-spiritual').value,career:document.getElementById('m-career').value,health:document.getElementById('m-health').value,love:document.getElementById('m-love').value,growth:document.getElementById('m-growth').value,fun:document.getElementById('m-fun').value,social:document.getElementById('m-social').value,finances:document.getElementById('m-finances').value,win:document.getElementById('m-win').value,lesson:document.getElementById('m-lesson').value,continue:document.getElementById('m-continue').value,stop:document.getElementById('m-stop').value,start:document.getElementById('m-start').value,intentions:document.getElementById('m-intentions').value,nextGoals:document.getElementById('m-next-goals').value,gratitude:document.getElementById('m-gratitude').value,rating:getRating('r-month'),computed:p};
   months[month]=entry;save('pg_months',months);
+  showToast('Monthly review saved!');setSync('sync-month','Saved locally ✓');
   try{
     await saveToSheets('Monthly Review',{
       Month:month,Rating:entry.rating,AvgMood:p?p.avgMood:0,AvgEnergy:p?p.avgEnergy:0,
-      DaysLogged:p?p.days:0,FinanceHrs:entry.finHours,IGNOUHrs:entry.maHours,
-      ASGHrs:entry.asgHours,Skills:entry.skills,
-      Spiritual:entry.spiritual,Career:entry.career,Health:entry.health,
-      Love:entry.love,Growth:entry.growth,Fun:entry.fun,Social:entry.social,
-      Finances:entry.finances,BiggestWin:entry.win,Lesson:entry.lesson,
-      Continue:entry.continue,Stop:entry.stop,Start:entry.start,
-      Intentions:entry.intentions,NextGoals:entry.nextGoals,Gratitude:entry.gratitude
+      DaysLogged:p?p.days:0,FinanceHrs:entry.finHours,IGNOUHrs:entry.maHours,ASGHrs:entry.asgHours,
+      Skills:entry.skills,Spiritual:entry.spiritual,Career:entry.career,Health:entry.health,
+      Love:entry.love,Growth:entry.growth,Fun:entry.fun,Social:entry.social,Finances:entry.finances,
+      BiggestWin:entry.win,Lesson:entry.lesson,Continue:entry.continue,Stop:entry.stop,
+      Start:entry.start,Intentions:entry.intentions,NextGoals:entry.nextGoals,Gratitude:entry.gratitude
     });
-    setSync('sync-month','Synced to Google Sheets ✓');showToast('Monthly review saved!');
-  }catch(e){setSync('sync-month','Synced to Google Sheets ✓');showToast('Monthly saved!');}
+    setSync('sync-month','Synced to Google Sheets ✓');
+  }catch(e){setSync('sync-month','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
   btn.disabled=false;btn.textContent='Save monthly review →';
 }
 
@@ -823,29 +824,22 @@ async function saveGoal(){
   const relBtn=document.querySelector('#view-goals .tg.on[onclick*="grel"]');
   const metMap={'Workout days':'workout','Learning hours':'learning','Deep work hours':'deepwork','Meditation days':'meditation','Books read':'books','Manual':'manual'};
   const entry={id:Date.now().toString(),title,type:typeBtn?typeBtn.textContent.trim():'Yearly',period:document.getElementById('g-period').value,metric:metBtn?(metMap[metBtn.textContent.trim()]||'manual'):'manual',relatedTo:relBtn?relBtn.textContent.trim():'',target:parseFloat(document.getElementById('g-target').value)||0,hoursSpent:parseFloat(document.getElementById('g-manual').value)||0,what:document.getElementById('g-what').value,next:document.getElementById('g-next').value,date:todayKey()};
-  goals.push(entry);save('pg_goals',goals);
-  // Re-enable immediately, show saved
+  goals.push(entry);save('pg_goals',goals);renderLiveGoals();renderGoalsList('all');
   btn.disabled=false;btn.textContent='Save goal →';
-  showToast('Goal saved!');
-  renderLiveGoals();renderGoalsList('all');
-  // Clear form
-  document.getElementById('g-title').value='';
-  document.getElementById('g-period').value='';
-  document.getElementById('g-target').value='';
-  document.getElementById('g-manual').value='';
-  document.getElementById('g-what').value='';
-  document.getElementById('g-next').value='';
-  // Sync in background
+  showToast('Goal saved!');setSync('sync-goal','Saved locally ✓');
+  document.getElementById('g-title').value='';document.getElementById('g-period').value='';
+  document.getElementById('g-target').value='';document.getElementById('g-manual').value='';
+  document.getElementById('g-what').value='';document.getElementById('g-next').value='';
   try{
     const lm=computeGoalMetric(entry);
     await saveToSheets('Goals',{
-      Goal:entry.title,Type:entry.type,Period:entry.period,
-      Metric:entry.metric,RelatedTo:entry.relatedTo,
-      Target:entry.target,Progress:lm.actual||0,
+      Goal:entry.title,Type:entry.type,Period:entry.period,Metric:entry.metric,
+      RelatedTo:entry.relatedTo,Target:entry.target,Progress:lm.actual||0,
       What:entry.what,NextStep:entry.next,Date:entry.date
     });
     setSync('sync-goal','Synced to Google Sheets ✓');
-  }catch(e){setSync('sync-goal','Saved locally');}
+  }catch(e){setSync('sync-goal','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
+  btn.disabled=false;btn.textContent='Save goal →';
 }
 
 function filterGoals(type,btn){document.querySelectorAll('#goal-tabs .tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGoalsList(type);}
@@ -899,12 +893,16 @@ async function saveBook(){
   const sb=document.querySelector('#view-books .tg.on[onclick*="bs"]');
   const entry={title,author:document.getElementById('b-author').value,genre:document.getElementById('b-genre').value,pages:parseInt(document.getElementById('b-pages').value)||0,rating:getRating('r-book'),notes:document.getElementById('b-notes').value,status:sb?sb.textContent.trim():'Reading',date:todayKey()};
   books.push(entry);save('pg_books',books);renderBooks();
-  try{await saveToSheets('Books',{
+  btn.disabled=false;btn.textContent='Save book →';
+  showToast('Book saved!');setSync('sync-book','Saved locally ✓');
+  try{
+    await saveToSheets('Books',{
       Title:entry.title,Author:entry.author,Genre:entry.genre,
       Pages:entry.pages,Rating:entry.rating,Status:entry.status,
       Takeaway:entry.notes,Date:entry.date
-    });setSync('sync-book','Synced to Google Sheets ✓');showToast('Book saved!');}
-  catch(e){setSync('sync-book','Synced to Google Sheets ✓');showToast('Book saved!');}
+    });
+    setSync('sync-book','Synced to Google Sheets ✓');
+  }catch(e){setSync('sync-book','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
   btn.disabled=false;btn.textContent='Save book →';
 }
 function renderBooks(){
@@ -924,11 +922,9 @@ async function saveFood(){
   const mtBtn=document.querySelector('#view-food .tg.on[onclick*="mtype"]');
   const mealType=mtBtn?mtBtn.textContent.trim():'';
   const entry={mealType,breakfast:document.getElementById('f-breakfast').value,breakfastTime:document.getElementById('f-bt').value,lunch:document.getElementById('f-lunch').value,lunchTime:document.getElementById('f-lt').value,dinner:document.getElementById('f-dinner').value,dinnerTime:document.getElementById('f-dt').value,snacks:document.getElementById('f-snacks').value,supplements:allSupps,alcohol:alcYes,alcoholWhat:document.getElementById('f-alc-what').value,alcoholOccasion:document.getElementById('f-alc-occasion').value,mealQuality:mqBtn?mqBtn.textContent.trim():'',notes:document.getElementById('f-notes').value};
-  // SAVE LOCALLY FIRST — so phone lock never loses data
   foodLog[key]=entry;save('pg_food',foodLog);renderFoodHistory();
   btn.disabled=false;btn.textContent='Save food log →';
   showToast('Food saved!');setSync('sync-food','Saved locally ✓');
-  // SYNC IN BACKGROUND — don't wait for it
   try{
     await saveToSheets('Food Log',{
       Date:key,MealType:entry.mealType,Breakfast:entry.breakfast,BreakfastTime:entry.breakfastTime,
@@ -938,7 +934,8 @@ async function saveFood(){
       MealQuality:entry.mealQuality,Notes:entry.notes
     });
     setSync('sync-food','Synced to Google Sheets ✓');
-  }catch(e){setSync('sync-food','Saved locally ✓');}
+  }catch(e){setSync('sync-food','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
+  btn.disabled=false;btn.textContent='Save food log →';
 }
 function renderFoodHistory(){
   const c=document.getElementById('food-history');const entries=Object.entries(foodLog).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
@@ -1005,41 +1002,10 @@ async function estimateNutrition(){
 // FINANCE
 let savings=JSON.parse(localStorage.getItem('pg_savings')||'[]');
 
-// RATINGS & UI HELPERS
-const RIDS=['r-morning','r-work','r-sleep','r-mood','r-energy','r-stress','r-day','r-week','r-book','r-month','r-quarter'];
-function initRatings(){RIDS.forEach(id=>{const el=document.getElementById(id);if(!el)return;for(let i=1;i<=10;i++){const b=document.createElement('button');b.className='rb';b.textContent=i;b.onclick=()=>{el.querySelectorAll('.rb').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');};el.appendChild(b);}});}
-function getRating(id){const el=document.getElementById(id);if(!el)return 0;const s=el.querySelector('.sel');return s?parseInt(s.textContent):0;}
-function sv(slId,outId,unit){document.getElementById(outId).textContent=parseFloat(document.getElementById(slId).value)+unit;}
-function tg(btn){btn.classList.toggle('on');}
-function tgSingle(btn,grp){btn.closest('.tr').querySelectorAll('.tg').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
-function alcTog(v){document.getElementById('alc-no').classList.toggle('on',v==='no');document.getElementById('alc-yes').classList.toggle('on',v==='yes');document.getElementById('alc-expand').style.display=v==='yes'?'block':'none';}
-function getTogs(el){return Array.from(el.querySelectorAll('.tg.on')).map(b=>b.textContent.trim());}
-function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
-function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',3000);}
-function setSync(id,msg,ok=true){const el=document.getElementById(id);if(el)el.innerHTML=`<span class="sync-p${ok?'':' err'}"></span>${msg}`;}
-
-function showView(name,btn){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  btn.classList.add('active');
-  if(name==='habits')renderHabits();
-  if(name==='books')renderBooks();
-  if(name==='weekly'){renderWeekAuto();renderWeekBars();renderWeekHabits();}
-  if(name==='monthly'){prefillMonth();renderMonthAuto();}
-  if(name==='quarterly'){renderQuarterAuto();renderQuarterGoals();}
-  if(name==='goals'){renderLiveGoals();renderGoalsList('all');}
-  if(name==='food')renderFoodHistory();
-  if(name==='finance')renderFinance();
-  if(name==='dashboard')renderDashboard();
-}
-
-
 function addSpend(){
-  const rawAmt=document.getElementById('d-spend-amt').value.toString().trim();
-  const amt=parseFloat(rawAmt)||0;
+  const amt=parseFloat(document.getElementById('d-spend-amt').value)||0;
   const cat=document.getElementById('d-spend-cat').value;
-  if(!amt||amt<=0){showToast('Enter an amount first',true);return;}
+  if(!amt){showToast('Enter an amount first',true);return;}
   const key=todayKey();
   if(!days[key])days[key]={ts:Date.now()};
   if(!days[key].spends)days[key].spends=[];
@@ -1077,9 +1043,8 @@ function removeSpend(i){
 }
 
 function logSaving(){
-  const rawAmt=document.getElementById('fin-save-amt').value.toString().trim();
-  const amt=parseFloat(rawAmt)||0;
-  if(!amt||amt<=0){showToast('Enter an amount first',true);return;}
+  const amt=parseFloat(document.getElementById('fin-save-amt').value)||0;
+  if(!amt){showToast('Enter an amount first',true);return;}
   const entry={amt,where:document.getElementById('fin-save-where').value,note:document.getElementById('fin-save-note').value,date:todayKey()};
   savings.push(entry);save('pg_savings',savings);
   document.getElementById('fin-save-amt').value='';document.getElementById('fin-save-note').value='';
@@ -1141,19 +1106,22 @@ function renderFinance(){
       <div class="ar"><span class="ar-l">This month</span><span class="ar-v" style="color:${mOrders.length>8?'var(--red)':'var(--t1)'}">${mOrders.length} orders</span></div>
       <div class="ar"><span class="ar-l">This year</span><span class="ar-v">${orders.length} orders</span></div>
       <div class="ar"><span class="ar-l">Avg per month</span><span class="ar-v">${orders.length?Math.round(orders.length/Math.max(1,new Date().getMonth()+1)):0}</span></div>
-      ${mOrders.length>0?'<div style="margin-top:8px;font-size:12px;color:var(--t3)">'+mOrders.map(o=>o.date+' — ₹'+(o.spendAmt||'?').toLocaleString('en-IN')+(o.spendNote?' ('+o.spendNote+')':'')).join('<br>')+'</div>':''}
+      ${mOrders.length>0?'<div style="margin-top:8px;font-size:12px;color:var(--t3)">'+mOrders.map(o=>o.date+' — ₹'+(o.amt||0).toLocaleString('en-IN')+(o.note?' ('+o.note+')':'')).join('<br>')+'</div>':''}
     `;
   }
 
-  // recent spends
+  // recent spends — read from spends[] array (new format)
   const rs=document.getElementById('fin-recent-spends');
   if(rs){
-    const all=Object.entries(days).filter(([,e])=>e.spendAmt>0).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,15);
-    if(!all.length){rs.innerHTML='<div class="empty">No spends logged yet. Add from Daily tab.</div>';return;}
-    rs.innerHTML=all.map(([date,e])=>`
+    const allSpends=Object.entries(days)
+      .flatMap(([date,e])=>(e.spends||[]).map(s=>({date,...s})))
+      .sort((a,b)=>b.date.localeCompare(a.date))
+      .slice(0,20);
+    if(!allSpends.length){rs.innerHTML='<div class="empty">No spends logged yet. Add from Daily tab.</div>';return;}
+    rs.innerHTML=allSpends.map(s=>`
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--b1)">
-        <div><div style="font-size:13px;color:var(--t1)">${e.spendCat||'Other'}${e.spendNote?' — '+e.spendNote:''}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${date}</div></div>
-        <div style="font-size:14px;font-weight:500;color:${e.spendCat==='Online order'?'var(--red)':'var(--gold)'}">₹${e.spendAmt.toLocaleString('en-IN')}</div>
+        <div><div style="font-size:13px;color:var(--t1)">${s.cat||'Other'}${s.note?' — '+s.note:''}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${s.date}${s.time?' · '+s.time:''}</div></div>
+        <div style="font-size:14px;font-weight:500;color:${s.cat==='Online order'?'var(--red)':'var(--gold)'}">₹${(s.amt||0).toLocaleString('en-IN')}</div>
       </div>
     `).join('');
   }
