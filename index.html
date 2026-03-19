@@ -574,6 +574,9 @@ async function saveDay(){
       SleepTime:entry.sleepTime,SleepQuality:entry.sleepRating,
       Mood:entry.mood,Energy:entry.energy,Stress:entry.stress,MoodNote:entry.moodNote,
       Instagram:entry.instagram,YouTube:entry.youtube,BadHabits:(entry.badHabits||[]).join(', '),
+      HabitsChecked:(entry.habitsChecked||[]).join(', '),
+      SpendTotal:(entry.spends||[]).reduce((s,x)=>s+x.amt,0),
+      SpendCount:(entry.spends||[]).length,
       Win:entry.win,Improve:entry.improve,Grateful:entry.grateful,
       Book:entry.book,DayRating:entry.dayRating,Notes:entry.notes
     });
@@ -745,10 +748,43 @@ function renderQuarterGoals(){
 
 async function saveQuarterly(){
   const btn=document.getElementById('btn-quarter');btn.disabled=true;btn.textContent='Saving...';
-  const qNum=Math.floor(new Date().getMonth()/3)+1;
-  showToast(`Q${qNum} ${new Date().getFullYear()} review saved!`);
-  setSync('sync-quarter','Saved locally ✓');
+  const qNum=Math.floor((new Date().getMonth())/3)+1;
+  const yr=new Date().getFullYear();
+  const qLabel=`Q${qNum} ${yr}`;
+  const qM=getQtrMonths();const allKeys=qM.flatMap(m=>getMonthKeys(m));const p=computePeriod(allKeys);
+  const entry={
+    quarter:qLabel,
+    wins:document.getElementById('q-wins').value,
+    shift:document.getElementById('q-shift').value,
+    didnt:document.getElementById('q-didnt').value,
+    surprise:document.getElementById('q-surprise').value,
+    skills:document.getElementById('q-skills').value,
+    next:document.getElementById('q-next').value,
+    word:document.getElementById('q-word').value,
+    rating:getRating('r-quarter'),
+    computed:p,
+    date:todayKey()
+  };
+  // save locally
+  if(!window.quarters)window.quarters=JSON.parse(localStorage.getItem('pg_quarters')||'{}');
+  window.quarters[qLabel]=entry;save('pg_quarters',window.quarters);
+  showToast(`${qLabel} review saved!`);setSync('sync-quarter','Saved locally ✓');
   btn.disabled=false;btn.textContent='Save quarterly review →';
+  // sync to Sheets
+  try{
+    await saveToSheets('Quarterly Review',{
+      Quarter:qLabel,Rating:entry.rating,
+      BiggestWins:entry.wins,WhatShifted:entry.shift,
+      WhatDidntWork:entry.didnt,WhatSurprised:entry.surprise,
+      SkillsGained:entry.skills,NextQuarterGoals:entry.next,
+      OneWord:entry.word,
+      AvgMood:p?p.avgMood:0,AvgEnergy:p?p.avgEnergy:0,
+      DaysLogged:p?p.days:0,WorkoutDays:p?p.workoutDays:0,
+      MeditationDays:p?p.meditationDays:0,TotalDeepWork:p?p.totalDW:0,
+      TotalLearningHrs:p?p.totalLearnHrs:0,Date:entry.date
+    });
+    setSync('sync-quarter','Synced to Google Sheets ✓');
+  }catch(e){setSync('sync-quarter','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
 }
 
 // GOALS
@@ -854,8 +890,14 @@ function renderGoalsList(filter){
 // HABITS
 function addHabit(){
   const name=document.getElementById('new-hab-name').value.trim();const type=document.getElementById('new-hab-type').value;
-  if(!name)return;habits.push({name,type,log:{},created:todayKey()});
+  if(!name)return;
+  const entry={name,type,log:{},created:todayKey()};
+  habits.push(entry);
   document.getElementById('new-hab-name').value='';save('pg_habits',habits);renderHabits();renderDailyHabitChecks();showToast('Habit added!');
+  // sync to Sheets in background
+  saveToSheets('Habits',{
+    Date:entry.created,Name:entry.name,Type:entry.type
+  }).then(()=>{}).catch(e=>console.error('Habit sync error:',e));
 }
 function removeHabit(i){habits.splice(i,1);save('pg_habits',habits);renderHabits();renderDailyHabitChecks();}
 function renderHabits(){
@@ -1009,12 +1051,18 @@ function addSpend(){
   const key=todayKey();
   if(!days[key])days[key]={ts:Date.now()};
   if(!days[key].spends)days[key].spends=[];
-  days[key].spends.push({amt,cat:cat||'Other',note:document.getElementById('d-spend-note').value,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+  const spend={amt,cat:cat||'Other',note:document.getElementById('d-spend-note').value,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})};
+  days[key].spends.push(spend);
   save('pg_days',days);
   document.getElementById('d-spend-amt').value='';
   document.getElementById('d-spend-note').value='';
   renderTodaySpends();
   showToast('Spend added!');
+  // sync to Sheets in background
+  saveToSheets('Daily Spends',{
+    Date:key,Time:spend.time,Amount:spend.amt,
+    Category:spend.cat,Note:spend.note||''
+  }).then(()=>{}).catch(e=>console.error('Spend sync error:',e));
 }
 
 function renderTodaySpends(){
@@ -1049,6 +1097,10 @@ function logSaving(){
   savings.push(entry);save('pg_savings',savings);
   document.getElementById('fin-save-amt').value='';document.getElementById('fin-save-note').value='';
   renderFinance();showToast('Saving logged!');
+  // sync to Sheets in background
+  saveToSheets('Savings',{
+    Date:entry.date,Amount:entry.amt,Where:entry.where,Note:entry.note||''
+  }).then(()=>{}).catch(e=>console.error('Saving sync error:',e));
 }
 
 function renderFinance(){
