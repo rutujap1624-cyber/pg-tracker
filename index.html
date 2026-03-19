@@ -684,7 +684,7 @@ async function saveMonthly(){
   const btn=document.getElementById('btn-month');btn.disabled=true;btn.textContent='Saving...';
   const mStr=thisMonth();const keys=getMonthKeys(mStr);const p=computePeriod(keys);
   const month=document.getElementById('m-month').value||new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
-  const entry={month,finHours:parseFloat(document.getElementById('sl-fin').value)||0,maHours:parseFloat(document.getElementById('sl-ma').value)||0,asgHours:parseFloat(document.getElementById('sl-asg').value)||0,skills:document.getElementById('m-skills').value,spiritual:document.getElementById('m-spiritual').value,career:document.getElementById('m-career').value,health:document.getElementById('m-health').value,love:document.getElementById('m-love').value,growth:document.getElementById('m-growth').value,fun:document.getElementById('m-fun').value,social:document.getElementById('m-social').value,finances:document.getElementById('m-finances').value,win:document.getElementById('m-win').value,lesson:document.getElementById('m-lesson').value,continue:document.getElementById('m-continue').value,stop:document.getElementById('m-stop').value,start:document.getElementById('m-start').value,intentions:document.getElementById('m-intentions').value,nextGoals:document.getElementById('m-next-goals').value,gratitude:document.getElementById('m-gratitude').value,rating:getRating('r-month'),computed:p};
+  const entry={month,finHours:parseFloat(document.getElementById('sl-fin').value)||0,maHours:parseFloat(document.getElementById('sl-ma').value)||0,asgHours:parseFloat(document.getElementById('sl-asg').value)||0,skills:document.getElementById('m-skills').value,spiritual:document.getElementById('m-spiritual').value,career:document.getElementById('m-career').value,health:document.getElementById('m-health').value,love:document.getElementById('m-love').value,growth:document.getElementById('m-growth').value,fun:document.getElementById('m-fun').value,social:document.getElementById('m-social').value,finances:document.getElementById('m-finances').value,win:document.getElementById('m-win').value,lesson:document.getElementById('m-lesson').value,keepDoing:document.getElementById('m-continue').value,stopDoing:document.getElementById('m-stop').value,startDoing:document.getElementById('m-start').value,intentions:document.getElementById('m-intentions').value,nextGoals:document.getElementById('m-next-goals').value,gratitude:document.getElementById('m-gratitude').value,rating:getRating('r-month'),computed:p};
   months[month]=entry;save('pg_months',months);
   showToast('Monthly review saved!');setSync('sync-month','Saved locally ✓');
   try{
@@ -693,8 +693,8 @@ async function saveMonthly(){
       DaysLogged:p?p.days:0,FinanceHrs:entry.finHours,IGNOUHrs:entry.maHours,ASGHrs:entry.asgHours,
       Skills:entry.skills,Spiritual:entry.spiritual,Career:entry.career,Health:entry.health,
       Love:entry.love,Growth:entry.growth,Fun:entry.fun,Social:entry.social,Finances:entry.finances,
-      BiggestWin:entry.win,Lesson:entry.lesson,Continue:entry.continue,Stop:entry.stop,
-      Start:entry.start,Intentions:entry.intentions,NextGoals:entry.nextGoals,Gratitude:entry.gratitude
+      BiggestWin:entry.win,Lesson:entry.lesson,Continue:entry.keepDoing,Stop:entry.stopDoing,
+      Start:entry.startDoing,Intentions:entry.intentions,NextGoals:entry.nextGoals,Gratitude:entry.gratitude
     });
     setSync('sync-month','Synced to Google Sheets ✓');
   }catch(e){setSync('sync-month','⚠ Sync failed — data saved locally',false);console.error('Sheets error:',e);}
