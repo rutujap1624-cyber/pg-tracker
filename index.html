@@ -491,8 +491,13 @@ const GAS_URL='https://script.google.com/macros/s/AKfycbxXmQ8eIhlr_db1VfFP9nMdDg
 
 async function saveToSheets(tab, row, keyCol){
   try{
-    await fetch(GAS_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({tab, row, keyCol: keyCol||'Date'})});
-  }catch(e){console.error('Sheets sync error:',e);throw e;}
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ tab, row, keyCol: keyCol || 'Date' })
+    });
+  } catch(e){ console.error('Sheets sync error:',e); throw e; }
 }
 const QUOTES=['Small steps every day build the life you want.','You don\'t rise to your goals — you fall to your systems.','Track your life or your life tracks you.','Every day is data. Collect it.','Progress, not perfection.','Your future self is watching through your memories.','What gets measured gets managed.','Show up. Even on the bad days.','Discipline is choosing what you want most over what you want now.','The secret of getting ahead is getting started.','You are the average of what you do every day.','Small habits compound into big lives.'];
 
